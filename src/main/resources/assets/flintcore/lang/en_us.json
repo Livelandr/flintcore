@@ -1,0 +1,31 @@
+{
+
+  "flintcore.gunpowder": "Gunpowder: ",
+  "flintcore.payload": "Ammo: ",
+  "flintcore.no_payload": "No ammo",
+  "flintcore.magazine": "Magazine: ",
+  "flintcore.no_magazine": "No magazine",
+  "flintcore.magempty": "Magazine empty",
+
+  "flintcore.chamberopen": "[CHAMBER OPEN]",
+  "flintcore.uncocked": "[UNCOCKED]",
+  "flintcore.cocked": "[COCKED]",
+  "flintcore.not_stuffed": "Not stuffed",
+  "flintcore.ready_to_shoot": "Ready to shoot",
+
+  "flintcore.attachment": "Attachment: ",
+  "flintcore.contains": "§2Contains: ",
+  "flintcore.ammo": "Ammo: ",
+  "flintcore.projectile_damage": "Projectile damage: ",
+
+  "flintcore.magazinetier": "§2Magazine tier: ",
+  "flintcore.weapontier": "§2Weapon tier: ",
+  "flintcore.weapontieruniversal": "§6Universal weapon tier.",
+  "flintcore.guninfoshift": "§6Hold [SHIFT] to view information about comparable ammo and attachments.",
+  "flintcore.guninfoctrl": "§6Hold [CTRL] to view information about inserted ammo.",
+  "flintcore.guninfoattachmentslots": "§2Attachment slots: ",
+  "flintcore.guninfoattachmenttags": "§2Attachment tags: ",
+  "flintcore.guninfonoattachment": "§4No attachment slots",
+  "flintcore.guninfoammo": "§2Compatible ammunition tags: ",
+  "flintcore.ammoinfotags": "§2Required ammunition tags: "
+}
