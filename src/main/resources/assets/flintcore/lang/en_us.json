@@ -7,6 +7,8 @@
   "flintcore.no_magazine": "No magazine",
   "flintcore.magempty": "Magazine empty",
 
+  "flintcore.chamberempty": "Chamber empty",
+  "flintcore.liveround": "[LIVE ROUND]",
   "flintcore.chamberopen": "[CHAMBER OPEN]",
   "flintcore.uncocked": "[UNCOCKED]",
   "flintcore.cocked": "[COCKED]",
@@ -17,6 +19,7 @@
   "flintcore.contains": "§2Contains: ",
   "flintcore.ammo": "Ammo: ",
   "flintcore.projectile_damage": "Projectile damage: ",
+  "flintcore.bullet_description": "§7When shot from a firearm:",
 
   "flintcore.magazinetier": "§2Magazine tier: ",
   "flintcore.weapontier": "§2Weapon tier: ",
@@ -27,5 +30,9 @@
   "flintcore.guninfoattachmenttags": "§2Attachment tags: ",
   "flintcore.guninfonoattachment": "§4No attachment slots",
   "flintcore.guninfoammo": "§2Compatible ammunition tags: ",
-  "flintcore.ammoinfotags": "§2Required ammunition tags: "
+  "flintcore.ammoinfotags": "§2Required ammunition tags: ",
+
+  "key.categories.flintcore": "Flintcore",
+  "key.flintcore.zoomaim": "Aim gun",
+  "key.flintcore.extractmagazine": "Extract magazine"
 }

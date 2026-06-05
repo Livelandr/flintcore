@@ -22,12 +22,12 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import com.livelandr.flintcore.core.ammo.BaseAmmo;
@@ -53,6 +53,7 @@ public class MagfedBase extends GunBase {
         return checkMagCompatibility((BaseMagazine) mag.getItem());
     }
 
+    // Events
     public void onSlideStart(Level pLevel, LivingEntity shooter, ItemStack gun) {
         if (shooter instanceof Player ply) {
             ply.getCooldowns().addCooldown(this, 10);
@@ -80,6 +81,8 @@ public class MagfedBase extends GunBase {
             ply.getCooldowns().addCooldown(this, 15);
         }
     }
+
+    // Events end
 
     public void InsertMagazine(Player ply, ItemStack gun, ItemStack mag) {
         if (gun.getTag().getBoolean("HaveMag")) return;
@@ -110,6 +113,10 @@ public class MagfedBase extends GunBase {
             ply.drop(magazineStack, false);
         }
 
+        // Not neccessary, but just for safety
+        gun.getTag().putInt("AmmoCount", 0);
+        gun.getTag().putInt("MaxAmmoCount", 0);
+
         onMagExtract(ply.level(), ply, gun);
     }
 
@@ -124,6 +131,13 @@ public class MagfedBase extends GunBase {
         return stack;
     }
 
+    public ItemStack GetFirstAmmoStack(ItemStack gun) {
+        int curAmmo = gun.getTag().getInt("AmmoCount");
+        ItemStack ammoData = ItemStack.of((CompoundTag) gun.getTag().get("A" + (curAmmo-1)));
+
+        return ammoData;
+    }
+
     public BaseAmmo GetFirstAmmo(ItemStack gun) {
         int curAmmo = gun.getTag().getInt("AmmoCount");
         ItemStack ammoData = ItemStack.of((CompoundTag) gun.getTag().get("A" + (curAmmo-1)));
@@ -136,23 +150,56 @@ public class MagfedBase extends GunBase {
         return ammo;
     }
 
+    // Chamber stuff
+    public ItemStack getChamberStack(ItemStack gun) {
+        ItemStack stack = ItemStack.of((CompoundTag) gun.getTag().get("Chamber"));
+        return stack;
+    }
+
+    public ItemStack ejectChamberStack(ItemStack gun) {
+        ItemStack stack = getChamberStack(gun);
+        zeroChamber(gun);
+
+        return stack;
+    }
+
+    public boolean chamberLoaded(ItemStack gun) {
+        ItemStack stack = getChamberStack(gun);
+        return (stack.getItem() != Items.AIR);
+    }
+
+    public void zeroChamber(ItemStack gun) {
+        CompoundTag empty = (new ItemStack(Items.AIR)).serializeNBT();
+        gun.getTag().put("Chamber", empty);
+    }
+
+    public void putInChamber(ItemStack gun, ItemStack ammo) {
+        CompoundTag ammoData = ammo.serializeNBT();
+        gun.getTag().put("Chamber", ammoData);
+    }
+
+    public void loadToChamber(ItemStack gun) {
+        putInChamber(gun, new ItemStack(GetFirstAmmo(gun)));
+    }
+
+    // Chamber stuff end
+
     public int GetMaxAmmoAmount(ItemStack pStack) {
         return pStack.getTag().getInt("MaxAmmoCount");
     }
 
     @Override
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
-        super.shoot(pLevel, pPlayer, gunStack);
-        BaseAmmo ammo = GetFirstAmmo(gunStack);
+         super.shoot(pLevel, pPlayer, gunStack);
+         BaseAmmo ammo = (BaseAmmo) ejectChamberStack(gunStack).getItem();
 
-        ammo.onAmmoShot(pPlayer, gunStack, pLevel);
-
-        if (GetAmmoAmount(gunStack) <= 0) gunStack.getTag().putBoolean("ShootReady", false);
+         ammo.onAmmoShot(pPlayer, gunStack, pLevel);
+         if (chamberLoaded(gunStack)) gunStack.getTag().putBoolean("ShootReady", false);
     }
 
     @Override
     public boolean tryShoot(Level pLevel, LivingEntity pPlayer, ItemStack gun, InteractionHand pUsedHand) {
-        if (GetAmmoAmount(gun) == 0) return false;
+        if (!chamberLoaded(gun)) return false;
 
         return true;
     }
@@ -178,8 +225,8 @@ public class MagfedBase extends GunBase {
             }
 
             // I'm sleep-deprived hi
-            if (gunStack.getTag().getBoolean("ShootReady")) {
-                if (gunStack.getTag().getBoolean("HaveMag")) {
+            if (gunStack.getTag().getBoolean("ShootReady") || (chamberLoaded(gunStack) && !checkMagazine(secondItemStack))) {
+                if (gunStack.getTag().getBoolean("HaveMag") || chamberLoaded(gunStack)) {
                     if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
                         if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
                             shoot(pLevel, pPlayer, gunStack);
@@ -188,6 +235,8 @@ public class MagfedBase extends GunBase {
                             if (needSlideAfterShot) {
                                 gunStack.getTag().putBoolean("SlideCocked", false);
                                 gunStack.getTag().putBoolean("ShootReady", false);
+                            } else {
+                                loadToChamber(gunStack);
                             }
                         } else {
                             onTryFailure(pLevel, pPlayer, gunStack);
@@ -212,6 +261,9 @@ public class MagfedBase extends GunBase {
                     gunStack.getTag().putBoolean("SlideCocked", false);
                     gunStack.getTag().putBoolean("ShootReady", true);
                     onSlideEnd(pLevel, pPlayer, gunStack);
+
+                    // Chamber
+                    loadToChamber(gunStack);
                 }
             }
         }
@@ -275,17 +327,23 @@ public class MagfedBase extends GunBase {
             pTooltipComponents.add(Component.literal(""));
         }
 
-        // Ammo + Chamber open
+        // Chamber + Magazine info
         if (pLevel != null && pStack.hasTag() ) {
             long time = pLevel.getGameTime();
+            ChatFormatting format;
+            if (time % 10 < 5) {
+                format = ChatFormatting.GRAY;
+            } else {
+                format = ChatFormatting.DARK_RED;
+            }
+
+            if (this.chamberLoaded(pStack)) {
+                pTooltipComponents.add(Component.translatable("flintcore.liveround").withStyle(format));
+            } else {
+                pTooltipComponents.add(Component.translatable("flintcore.chamberempty"));
+            }
 
             if (!pStack.getTag().getBoolean("HaveMag")) {
-                ChatFormatting format;
-                if (time % 10 < 5) {
-                    format = ChatFormatting.GRAY;
-                } else {
-                    format = ChatFormatting.DARK_RED;
-                }
                 pTooltipComponents.add(Component.translatable("flintcore.no_magazine").withStyle(format));
             } else {
                 CompoundTag nbt = (CompoundTag) pStack.getTag().get("Magazine");
@@ -310,12 +368,6 @@ public class MagfedBase extends GunBase {
                         pTooltipComponents.add(Component.translatable("flintcore.guninfoctrl"));
                     }
                 } else {
-                    ChatFormatting format;
-                    if (time % 10 < 5) {
-                        format = ChatFormatting.GRAY;
-                    } else {
-                        format = ChatFormatting.DARK_RED;
-                    }
                     pTooltipComponents.add(Component.translatable("flintcore.no_payload").withStyle(format));
                 }
             }

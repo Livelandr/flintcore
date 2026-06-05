@@ -206,7 +206,7 @@ public class GunBase extends Item {
         CompoundTag attachmentsData = gun.getOrCreateTag().getCompound("Attachments");
 
         if (!attachmentsData.getCompound(type).getBoolean("enabled")) {
-            return new ItemStack(Items.AIR);
+            return ItemStack.EMPTY;
         }
 
         CompoundTag item = attachmentsData.getCompound(type).getCompound("item");

@@ -13,14 +13,14 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(flintcore.MOD_ID)
-public class flintcore
+@Mod(Flintcore.MOD_ID)
+public class Flintcore
 {
 
     public static final String MOD_ID = "flintcore";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public flintcore(FMLJavaModLoadingContext context)
+    public Flintcore(FMLJavaModLoadingContext context)
     {
         IEventBus modEventBus = context.getModEventBus();
 
@@ -37,11 +37,9 @@ public class flintcore
         LOGGER.info("Flintcore initializing common...");
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        // Do something when the server starts
         LOGGER.info("Flintcore initialized on server.");
     }
 }

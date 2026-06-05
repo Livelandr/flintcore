@@ -18,14 +18,16 @@
  */
 package com.livelandr.flintcore.core.network;
 
-import net.minecraft.resources.ResourceLocation;
+import com.livelandr.flintcore.core.network.packets.C2S_ExtractMagazine;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
-import com.livelandr.flintcore.flintcore;
+import com.livelandr.flintcore.Flintcore;
 import com.livelandr.flintcore.core.network.packets.S2C_RecoilCameraOffsetPacket;
+
+import static net.minecraft.resources.ResourceLocation.fromNamespaceAndPath;
 
 
 public class PacketHandler {
@@ -33,7 +35,7 @@ public class PacketHandler {
     private static final String PROTOCOL_VERSION = "1";
 
     private static final SimpleChannel INSTANCE = NetworkRegistry.ChannelBuilder.named(
-            new ResourceLocation(flintcore.MOD_ID, "main"))
+            fromNamespaceAndPath(Flintcore.MOD_ID, "main"))
             .networkProtocolVersion(() -> PROTOCOL_VERSION)
             .clientAcceptedVersions((version) -> true)
             .serverAcceptedVersions((version) -> true)
@@ -44,6 +46,12 @@ public class PacketHandler {
                 .encoder(S2C_RecoilCameraOffsetPacket::encode)
                 .decoder(S2C_RecoilCameraOffsetPacket::new)
                 .consumerMainThread(S2C_RecoilCameraOffsetPacket::handler)
+                .add();
+
+        INSTANCE.messageBuilder(C2S_ExtractMagazine.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(C2S_ExtractMagazine::encode)
+                .decoder(C2S_ExtractMagazine::new)
+                .consumerMainThread(C2S_ExtractMagazine::handler)
                 .add();
     }
 

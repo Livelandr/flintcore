@@ -43,6 +43,10 @@ public class BaseAmmo extends Item {
         super(pProperties);
     }
 
+    public void addRequiredTag(String tag) {
+        this.requiredCaliberTags.add(tag);
+    }
+
     public void onAmmoShot(LivingEntity shooter, ItemStack gun, Level level) {}
 
     public int ammoCountInOne(ItemStack ammo) {

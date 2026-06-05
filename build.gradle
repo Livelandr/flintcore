@@ -202,7 +202,22 @@ publishing {
         }
     }
 }
-
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+
+// Ждем, пока Gradle полностью настроит проект и создаст все динамические таски
+afterEvaluate {
+    // Проверяем, появился ли таск reobfJar (чтобы Gradle больше не ругался)
+    if (tasks.findByName('reobfJar')) {
+        tasks.named('reobfJar').configure {
+            doLast {
+                copy {
+                    from tasks.named('jar').get().archiveFile
+                    into "C:\\Users\\Livelandr\\AppData\\Roaming\\PrismLauncher\\instances\\FLintNpowderDEV\\minecraft\\mods"
+                }
+            }
+        }
+    }
 }

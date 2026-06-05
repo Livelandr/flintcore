@@ -21,14 +21,14 @@ package com.livelandr.flintcore.core.util;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import com.livelandr.flintcore.flintcore;
+import com.livelandr.flintcore.Flintcore;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-@Mod.EventBusSubscriber(modid = flintcore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(modid = Flintcore.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ServerTickHandler {
     public static ServerTickHandler INSTANCE = new ServerTickHandler();
     static List<TickDelayTask> tasks = new ArrayList<>();

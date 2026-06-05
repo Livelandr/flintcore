@@ -29,8 +29,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.Tags;
 import com.livelandr.flintcore.core.ammo.BaseAmmo;
@@ -57,7 +55,7 @@ public class FlintlockBase extends GunBase {
 
     public void onGunpowder(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
         pLevel.playSeededSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
-                SoundEvents.SAND_BREAK, SoundSource.NEUTRAL, 5.0F, 1.0F, 0);
+                SoundEvents.SAND_BREAK, SoundSource.NEUTRAL, 1F, 1.0F, 0);
 
         if (shooter instanceof Player ply) {
             ply.getCooldowns().addCooldown(this, gunpowderCooldown(ply, gun));
