@@ -207,65 +207,78 @@ public class MagfedBase extends GunBase {
     }
 
     @Override
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!checkCooldown(gunStack)) {
+            return false;
+        }
 
         ItemStack secondItemStack;
-        if (pUsedHand == InteractionHand.MAIN_HAND)
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
-        else
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (!pLevel.isClientSide()) {
-            if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
+        if (!proxy) {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+        } else {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+        }
 
-            // Attachment
-            if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
-                this.setAttachment(pPlayer, gunStack, secondItemStack);
-                return true;
-            }
+        if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
 
-            // I'm sleep-deprived hi
-            if (gunStack.getTag().getBoolean("ShootReady") || (chamberLoaded(gunStack) && !checkMagazine(secondItemStack))) {
-                if (gunStack.getTag().getBoolean("HaveMag") || chamberLoaded(gunStack)) {
-                    if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
-                        if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                            shoot(pLevel, pPlayer, gunStack);
-
-                            if (needSlideAfterShot) {
-                                gunStack.getTag().putBoolean("SlideCocked", false);
-                                gunStack.getTag().putBoolean("ShootReady", false);
-                            } else {
-                                loadToChamber(gunStack);
-                            }
-                        } else {
-                            onTryFailure(pLevel, pPlayer, gunStack);
-                            gunStack.getTag().putBoolean("ShootReady", false);
-                        }
-                    }
+        // Attachment
+        if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
+            this.setAttachment(pPlayer, gunStack, secondItemStack);
+            return true;
+        }
+        // I'm sleep-deprived hi
+        if (gunStack.getTag().getBoolean("ShootReady") || (chamberLoaded(gunStack) && !checkMagazine(secondItemStack))) {
+            if (gunStack.getTag().getBoolean("HaveMag") || chamberLoaded(gunStack)) {
+                if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
+                    if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
+                                        if (proxy) {
+                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
                 } else {
-                    onTryFailure(pLevel, pPlayer, gunStack);
-                    gunStack.getTag().putBoolean("ShootReady", false);
+                    shoot(pLevel, pPlayer, gunStack);
+                }
+
+                        if (needSlideAfterShot) {
+                            gunStack.getTag().putBoolean("SlideCocked", false);
+                            gunStack.getTag().putBoolean("ShootReady", false);
+                        } else {
+                            loadToChamber(gunStack);
+                        }
+                    } else {
+                        onTryFailure(pLevel, pPlayer, gunStack);
+                        gunStack.getTag().putBoolean("ShootReady", false);
+                    }
                 }
             } else {
-                if (!gunStack.getTag().getBoolean("HaveMag")) {
-                    if (checkMagazine(secondItemStack)) {
-                        InsertMagazine(pPlayer, gunStack, secondItemStack);
-                    }
-                } else if (GetAmmoAmount(gunStack) <= 0) {
-                    ExtractMagazine(pPlayer, gunStack);
-                } else if (!gunStack.getTag().getBoolean("SlideCocked")) {
-                    gunStack.getTag().putBoolean("SlideCocked", true);
-                    onSlideStart(pLevel, pPlayer, gunStack);
-                } else {
-                    gunStack.getTag().putBoolean("SlideCocked", false);
-                    gunStack.getTag().putBoolean("ShootReady", true);
-                    onSlideEnd(pLevel, pPlayer, gunStack);
-
-                    // Chamber
-                    loadToChamber(gunStack);
+                onTryFailure(pLevel, pPlayer, gunStack);
+                gunStack.getTag().putBoolean("ShootReady", false);
+            }
+        } else {
+            if (!gunStack.getTag().getBoolean("HaveMag")) {
+                if (checkMagazine(secondItemStack)) {
+                    InsertMagazine(pPlayer, gunStack, secondItemStack);
                 }
+            } else if (GetAmmoAmount(gunStack) <= 0) {
+                ExtractMagazine(pPlayer, gunStack);
+            } else if (!gunStack.getTag().getBoolean("SlideCocked")) {
+                gunStack.getTag().putBoolean("SlideCocked", true);
+                onSlideStart(pLevel, pPlayer, gunStack);
+            } else {
+                gunStack.getTag().putBoolean("SlideCocked", false);
+                gunStack.getTag().putBoolean("ShootReady", true);
+                onSlideEnd(pLevel, pPlayer, gunStack);
+
+                // Chamber
+                loadToChamber(gunStack);
             }
         }
+
 
         return true;
     }

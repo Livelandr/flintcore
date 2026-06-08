@@ -115,12 +115,23 @@ public class PumpActionBase extends GunBase {
     }
 
     @Override
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!checkCooldown(gunStack)) {
+            return false;
+        }
         ItemStack secondItemStack;
-        if (pUsedHand == InteractionHand.MAIN_HAND)
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
-        else
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+
+        if (!proxy) {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+        } else {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+        }
 
 
         if (!pLevel.isClientSide()) {
@@ -140,7 +151,11 @@ public class PumpActionBase extends GunBase {
                     if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
                         // Shoot
                         if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                            shoot(pLevel, pPlayer, gunStack);
+                                            if (proxy) {
+                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                } else {
+                    shoot(pLevel, pPlayer, gunStack);
+                }
                         } else {
                             onTryFailure(pLevel, pPlayer, gunStack);
                         }

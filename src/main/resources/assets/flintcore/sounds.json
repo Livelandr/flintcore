@@ -1,20 +1,4 @@
 {
-  "tone1k": {
-    "sounds": [
-      {
-        "name": "flintcore:tone1k",
-        "stream": false
-      }
-    ]
-  },
-  "tone5k": {
-    "sounds": [
-      {
-        "name": "flintcore:tone5k",
-        "stream": false
-      }
-    ]
-  },
   "brownnoise": {
     "sounds": [
       {

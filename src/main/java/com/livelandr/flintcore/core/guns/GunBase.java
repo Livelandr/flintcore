@@ -466,31 +466,46 @@ public class GunBase extends Item {
     }
 
     // Main Interaction, RMB
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
-        ItemStack secondItemStack;
-        if (pUsedHand == InteractionHand.MAIN_HAND)
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
-        else
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
-
-        if (!pLevel.isClientSide()) {
-            if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
-
-            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
-                if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                    shoot(pLevel, pPlayer, gunStack);
-                } else {
-                    onTryFailure(pLevel, pPlayer, gunStack);
-                }
-            }
-
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!checkCooldown(gunStack)) {
+            return false;
         }
+
+        ItemStack secondItemStack;
+
+        if (!proxy) {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+        } else {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+        }
+
+        if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
+
+        if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
+            if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
+                if (proxy) {
+                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                } else {
+                    shoot(pLevel, pPlayer, gunStack);
+                }
+            } else {
+                onTryFailure(pLevel, pPlayer, gunStack);
+            }
+        }
+
 
         return true;
     }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+
         ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
 
         if (!checkCooldown(gunStack)) {
@@ -503,7 +518,7 @@ public class GunBase extends Item {
         else
             secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
-        interaction(pLevel, pPlayer, gunStack, pUsedHand, false, 0, 0);
+        interaction(pLevel, pPlayer, gunStack, pUsedHand, false, 0, 0, null);
 
         return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
     }

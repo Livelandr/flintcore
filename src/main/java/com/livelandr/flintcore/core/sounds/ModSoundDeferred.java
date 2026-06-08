@@ -13,8 +13,6 @@ public class ModSoundDeferred {
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, Flintcore.MOD_ID);
 
-    public static final RegistryObject<SoundEvent> TONE5000 = registerSoundEvents("tone5k");
-    public static final RegistryObject<SoundEvent> TONE1000 = registerSoundEvents("tone1k");
     public static final RegistryObject<SoundEvent> BROWNNOISE = registerSoundEvents("brownnoise");
 
     public static RegistryObject<SoundEvent> registerSoundEvents(String name) {

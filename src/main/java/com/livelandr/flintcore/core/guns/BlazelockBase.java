@@ -146,63 +146,77 @@ public class BlazelockBase extends GunBase {
 
     // TODO: Fix all this noodle code, it's so f ugly I can't
     @Override
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!checkCooldown(gunStack)) {
+            return false;
+        }
         ItemStack secondItemStack;
-        if (pUsedHand == InteractionHand.MAIN_HAND)
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
-        else
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (!pLevel.isClientSide()) {
-            if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
+        if (!proxy) {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+        } else {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+        }
 
-            // Attachment
-            if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
-                this.setAttachment(pPlayer, gunStack, secondItemStack);
+        if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
 
-                return true;
-            }
+        // Attachment
+        if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
+            this.setAttachment(pPlayer, gunStack, secondItemStack);
 
-            // If everything is done - shoot
-            if (gunStack.getTag().getBoolean("ShootReady") && !gunStack.getTag().getBoolean("ChamberOpen")) {
-                if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
-                    if (!needCocking || gunStack.getTag().getBoolean("IsCocked")) {
-                        if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                            shoot(pLevel, pPlayer, gunStack);
-                        } else {
-                            onTryFailure(pLevel, pPlayer, gunStack);
-                            gunStack.getTag().putBoolean("ShootReady", false);
-                        }
-                    } else {
-                        gunStack.getTag().putBoolean("IsCocked", true);
-                        onCocking(pLevel, pPlayer, gunStack);
-                    }
+            return true;
+        }
+
+        // If everything is done - shoot
+        if (gunStack.getTag().getBoolean("ShootReady") && !gunStack.getTag().getBoolean("ChamberOpen")) {
+            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
+                if (!needCocking || gunStack.getTag().getBoolean("IsCocked")) {
+                    if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
+                                        if (proxy) {
+                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                } else {
+                    shoot(pLevel, pPlayer, gunStack);
                 }
-            } else {
-                // If chamber opened - try to insert ammo, or close
-                if (gunStack.getTag().getBoolean("ChamberOpen")) {
-                    // If ammo is less than max
-                    if (GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
-                        if (checkAmmoCompatibility(secondItemStack.getItem())) {
-                            AddAmmo(pPlayer, gunStack, secondItemStack);
-                            onAmmoInsert(pLevel, pPlayer, gunStack, pUsedHand);
-                        } else {
-                            gunStack.getTag().putBoolean("ChamberOpen", false);
-                            onChamberClose(pLevel, pPlayer, gunStack);
-                            gunStack.getTag().putBoolean("ShootReady", true);
-                        }
+                    } else {
+                        onTryFailure(pLevel, pPlayer, gunStack);
+                        gunStack.getTag().putBoolean("ShootReady", false);
+                    }
+                } else {
+                    gunStack.getTag().putBoolean("IsCocked", true);
+                    onCocking(pLevel, pPlayer, gunStack);
+                }
+            }
+        } else {
+            // If chamber opened - try to insert ammo, or close
+            if (gunStack.getTag().getBoolean("ChamberOpen")) {
+                // If ammo is less than max
+                if (GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
+                    if (checkAmmoCompatibility(secondItemStack.getItem())) {
+                        AddAmmo(pPlayer, gunStack, secondItemStack);
+                        onAmmoInsert(pLevel, pPlayer, gunStack, pUsedHand);
                     } else {
                         gunStack.getTag().putBoolean("ChamberOpen", false);
                         onChamberClose(pLevel, pPlayer, gunStack);
                         gunStack.getTag().putBoolean("ShootReady", true);
                     }
-
-                    return true;
                 } else {
-                    openChamber(pPlayer, gunStack);
+                    gunStack.getTag().putBoolean("ChamberOpen", false);
+                    onChamberClose(pLevel, pPlayer, gunStack);
+                    gunStack.getTag().putBoolean("ShootReady", true);
                 }
+
+                return true;
+            } else {
+                openChamber(pPlayer, gunStack);
             }
         }
+
 
         return true;
     }

@@ -12,7 +12,7 @@ import net.minecraft.world.level.Level;
 
 public class SiegeEngineAdapter {
     public LivingEntity scapegoatEnt = null;
-    public ItemStack gun;
+    public ItemStack gun = null;
     public float rotationX, rotationY;
 
     public ItemStack getGun() {
@@ -34,6 +34,10 @@ public class SiegeEngineAdapter {
         rotationY = _val;
     }
 
+    public void tick() {
+        GunBase.getGunBase(getGun()).decreaseCooldownTick(getGun());
+    }
+
     public float getRotationX() {
         return rotationX;
     }
@@ -45,12 +49,12 @@ public class SiegeEngineAdapter {
         gun = _gun;
     }
 
-    public void createGun(GunBase _gunClass) {
-        gun = new ItemStack(_gunClass);
+    public void createGun(Item _gunClass) {
+        this.gun = new ItemStack(_gunClass);
     }
 
-    public void transmitInteraction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand) {
-        GunBase.getGunBase(gun).interaction(pLevel, pPlayer, gunStack, pUsedHand, true, rotationX, rotationY);
+    public void transmitInteraction(Level pLevel, LivingEntity pPlayer, InteractionHand pUsedHand) {
+        GunBase.getGunBase(gun).interaction(pLevel, scapegoatEnt, this.gun, pUsedHand, true, rotationX, rotationY, pPlayer);
     }
 
     public void forceSetAmmo(ItemStack ammo) {
@@ -58,10 +62,10 @@ public class SiegeEngineAdapter {
 
         if (gunItem instanceof FlintlockBase) {
             CompoundTag ammoData = ammo.serializeNBT();
-            gun.getTag().put("AmmoType", ammoData);
+            gun.getOrCreateTag().put("AmmoType", ammoData);
             gun.getTag().putBoolean("HasAmmo", true);
         } if (gunItem instanceof BlazelockBase || gunItem instanceof PumpActionBase) {
-            gun.getTag().putInt("Ammo", 0);
+            gun.getOrCreateTag().putInt("Ammo", 0);
             ((BlazelockBase) gunItem).AddAmmo(null, gun, ammo);
         } else if (gunItem instanceof MagfedBase MB) {
             MB.InsertMagazine(null, gun, ammo);

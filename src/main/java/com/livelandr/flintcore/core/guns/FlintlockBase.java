@@ -18,6 +18,7 @@
  */
 package com.livelandr.flintcore.core.guns;
 
+import com.livelandr.flintcore.Flintcore;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -89,10 +90,12 @@ public class FlintlockBase extends GunBase {
         BaseAmmo ammo = (BaseAmmo) ammoData.getItem();
         ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
 
-        gunStack.getTag().putInt("Gunpowder", 0);
-        gunStack.getTag().putBoolean("HasAmmo", false);
-        gunStack.getTag().putBoolean("IsCocked", false);
-        gunStack.getTag().putBoolean("IsStuffed", false);
+        if (!pLevel.isClientSide()) {
+            gunStack.getTag().putInt("Gunpowder", 0);
+            gunStack.getTag().putBoolean("HasAmmo", false);
+            gunStack.getTag().putBoolean("IsCocked", false);
+            gunStack.getTag().putBoolean("IsStuffed", false);
+        }
 
         setReloadAnimation(gunStack);
     }
@@ -105,32 +108,47 @@ public class FlintlockBase extends GunBase {
     }
 
     @Override
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!checkCooldown(gunStack)) {
+            return false;
+        }
+
         ItemStack secondItemStack;
-        if (pUsedHand == InteractionHand.MAIN_HAND)
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
-        else
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (!pLevel.isClientSide()) {
-            if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
+        if (!proxy) {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+        } else {
+            if (pUsedHand == InteractionHand.MAIN_HAND)
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
+            else
+                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+        }
+            
+        if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
 
-            // Attachment
-            if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
-                this.setAttachment(pPlayer, gunStack, secondItemStack);
-                return true;
-            }
+        // Attachment
+        if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
+            this.setAttachment(pPlayer, gunStack, secondItemStack);
+            return true;
+        }
 
-            // If everything is done - shoot
-            if (gunStack.getTag().getBoolean("HasAmmo") && gunStack.getTag().getInt("Gunpowder") >= GunpowderRequired && (gunStack.getTag().getBoolean("IsCocked") || (noCock && gunStack.getTag().getBoolean("IsStuffed")) || (noStuff && noCock))) {
-                if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
-                    if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                        shoot(pLevel, pPlayer, gunStack);
-                    } else {
-                        onTryFailure(pLevel, pPlayer, gunStack);
-                    }
+        // If everything is done - shoot
+        if (gunStack.getTag().getBoolean("HasAmmo") && gunStack.getTag().getInt("Gunpowder") >= GunpowderRequired && (gunStack.getTag().getBoolean("IsCocked") || (noCock && gunStack.getTag().getBoolean("IsStuffed")) || (noStuff && noCock))) {
+            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
+                if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
+                if (proxy) {
+                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                } else {
+                    shoot(pLevel, pPlayer, gunStack);
+                }
+                } else {
+                    onTryFailure(pLevel, pPlayer, gunStack);
                 }
             }
+        }
 
         // Try to add gunpowder if isn't added
         if (gunStack.getTag().getInt("Gunpowder") < GunpowderRequired) {
@@ -168,7 +186,7 @@ public class FlintlockBase extends GunBase {
                 }
             }
 
-        }
+
         }
 
         return true;
