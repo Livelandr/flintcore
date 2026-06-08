@@ -18,8 +18,10 @@
  */
 package com.livelandr.flintcore.core.ammo;
 
+import com.livelandr.flintcore.core.util.CameraWork;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -47,7 +49,10 @@ public class BaseAmmo extends Item {
         this.requiredCaliberTags.add(tag);
     }
 
-    public void onAmmoShot(LivingEntity shooter, ItemStack gun, Level level) {}
+    public void onAmmoShot(float xRotation, float yRotation, LivingEntity shooter, ItemStack gun, Level level) {}
+    public void onAmmoShot(LivingEntity shooter, ItemStack gun, Level level)  {
+        onAmmoShot(CameraWork.getPlayerViewX(shooter), CameraWork.getPlayerViewY(shooter), shooter, gun, level);
+    }
 
     public int ammoCountInOne(ItemStack ammo) {
         return 1;

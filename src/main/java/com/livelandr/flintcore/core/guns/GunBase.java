@@ -20,14 +20,15 @@ package com.livelandr.flintcore.core.guns;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.livelandr.flintcore.Flintcore;
+import com.livelandr.flintcore.core.util.CameraWork;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -63,6 +64,7 @@ public class GunBase extends Item {
     public int ammoCooldownTicks = 20;
 
     // HOOKS SYSTEM
+    // TODO: REPLACE HOOKS TO OTHER STATIC CLASS
     public static Map<String, List<FlintcoreHook>> hooks = new HashMap<>();
     static {
         hooks.put("calculateDamageModifier", new ArrayList<>());
@@ -71,6 +73,7 @@ public class GunBase extends Item {
         hooks.put("calculatePropellantModifier", new ArrayList<>());
         hooks.put("calculateAccuracyModifier", new ArrayList<>());
 
+        hooks.put("tryShoot", new ArrayList<>());
         hooks.put("onShoot", new ArrayList<>());
     }
     public static float calculateHookSum(String hookName, LivingEntity shooter, ItemStack gun, float baseValue) {
@@ -99,7 +102,7 @@ public class GunBase extends Item {
     }
     // HOOKS SYSTEM END
 
-
+    // Static thing, just prettier than casting, sadly there is no inline in java (?) :(
     public static GunBase getGunBase(ItemStack gun) {
         return (GunBase) gun.getItem();
     }
@@ -129,6 +132,12 @@ public class GunBase extends Item {
         });
     }
 
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        if (slotChanged) return true;
+        return false;
+    }
+
     // Tier-Tag
     public int getWeaponTier() {
         return weaponTier;
@@ -139,44 +148,52 @@ public class GunBase extends Item {
         if (getWeaponTier() == -1) return true;
         return (getWeaponTier() >= requiredTier);
     }
+    // Caliber tags getter
     public Set<String> getAllCaliberTags() {return allowedCalibersTags;}
+    // Attachment tags getter
     public Set<String> getAllAttachmentsTags() {return allowedAttachmentsTags;}
+    // Adding compatible calibers tag
     public void addCompatibleCaliberTag(String caliber) {
         allowedCalibersTags.add(caliber);
     }
+    // Adding compatible attachments tag
     public void addCompatibleAttachmentTag(String tag) {
         allowedAttachmentsTags.add(tag);
     }
+    // Adding compatible attachment slot
     public void addAttachmentSlot(String slot) {
         attachmentSlots.add(slot);
     }
+    // Check if attachment slot present
     public boolean haveAttachmentSlot(String slot) {
         return attachmentSlots.contains(slot);
     }
+    // Check if attachment tag present
     public boolean checkCaliberCompatibility(Set<String> requiredTags) {
         if (requiredTags.isEmpty()) return false;
         if (requiredTags.contains("universal")) return true;
         return getAllCaliberTags().containsAll(requiredTags);
     }
-    public boolean checkAttachmentCompatibility(Set<String> requiredTags, String slot) {
-        return haveAttachmentSlot(slot) && getAllAttachmentsTags().containsAll(requiredTags);
-    }
+    // Check ammunition compatibility
     public boolean checkAmmoCompatibility(BaseAmmo ammo) {
         if (!checkTier(ammo.tier)) return false;
         return checkCaliberCompatibility(ammo.requiredCaliberTags);
     }
-    public boolean checkAmmo(Item ammo) {
+    // Check ammunition compability with Item directly
+    public boolean checkAmmoCompatibility(Item ammo) {
         if (!(ammo instanceof BaseAmmo)) return false;
         return checkAmmoCompatibility((BaseAmmo) ammo);
     }
-    public boolean checkAttachmentComparability(Player ply, ItemStack gun, Item attachment) {
+    // Check if attachment compatilble (slot + all tags)
+    public boolean checkAttachmentComparability(LivingEntity ply, ItemStack gun, Item attachment) {
         if (!(attachment instanceof AttachmentBase)) return false;
         AttachmentBase atch = (AttachmentBase) attachment;
 
         if (!haveAttachmentSlot(atch.getSlot())) return false;
         return getAllAttachmentsTags().containsAll(atch.getTags());
     }
-    public void setAttachment(Player ply, ItemStack gun, ItemStack attachment) {
+    // Install attachment to slot
+    public void setAttachment(LivingEntity ply, ItemStack gun, ItemStack attachment) {
         CompoundTag attachmentData = gun.getTag().getCompound("Attachments");
         String attachType = ((AttachmentBase) attachment.getItem()).getSlot();
         // Return old attachment
@@ -194,14 +211,18 @@ public class GunBase extends Item {
 
         gun.getTag().put("Attachments", attachmentData);
     }
-    public void detachAttachment(Player ply, ItemStack gun, String type) {
+    // Remove attachment from slot
+    public void detachAttachment(LivingEntity ent, ItemStack gun, String type) {
         ItemStack detached = getAttachmentStack(gun, type);
-        ((AttachmentBase) detached.getItem()).onDetach(ply, detached, gun);
-        if (!ply.getInventory().add(detached)) {
-            ply.drop(detached, false);
+        ((AttachmentBase) detached.getItem()).onDetach(ent, detached, gun);
+        if (ent instanceof Player ply) {
+            if (!ply.getInventory().add(detached)) {
+                ply.drop(detached, false);
+            }
         }
         gun.getOrCreateTag().getCompound("Attachments").getCompound(type).putBoolean("enabled", false);
     }
+    // Get ItemStack from attachment
     public ItemStack getAttachmentStack(ItemStack gun, String type) {
         CompoundTag attachmentsData = gun.getOrCreateTag().getCompound("Attachments");
 
@@ -215,15 +236,19 @@ public class GunBase extends Item {
 
         return deserializedAttachment;
     }
+    // If there is some attachment in slot
     public boolean isAttachmentValidAndEnabled(ItemStack gun, String slot) {
         return (getAttachmentStack(gun, slot).getItem() != Items.AIR);
     }
+    // Check if EXACT attachment installed in slot
     public boolean isAttachmentSpecific(ItemStack gun, String slot, Item attachment) {
         return (getAttachmentStack(gun, slot).getItem() == attachment);
     }
+    // Get Item from attachment
     public Item getAttachmentItem(ItemStack gun, String type) {
         return getAttachmentStack(gun, type).getItem();
     }
+    // Get attachment display name (Idk seems useless)
     public String getAttachmentName(ItemStack gun, String type) {
         return getAttachmentStack(gun, type).getDisplayName().getString();
     }
@@ -239,8 +264,35 @@ public class GunBase extends Item {
         return super.getAttributeModifiers(slot, stack);
     }
 
+    // Cooldown stuff
+    public void decreaseCooldownTick(ItemStack gun) {
+        gun.getOrCreateTag().putInt("cooldownTicks", gun.getOrCreateTag().getInt("cooldownTicks")-1);
+
+        if (gun.getOrCreateTag().getInt("cooldownTicks") < 0) {
+            gun.getOrCreateTag().putInt("cooldownTicks", 0);
+        }
+    }
+
+    public void setCooldown(Entity ent, ItemStack gun, int ticks) {
+        if (ent instanceof Player ply) {
+            ply.getCooldowns().addCooldown(gun.getItem(), ticks);
+        }
+        gun.getOrCreateTag().putInt("cooldownTicks", ticks);
+    }
+
+    public boolean checkCooldown(ItemStack gun) {
+        return gun.getOrCreateTag().getInt("cooldownTicks") <= 0;
+    }
+
+    @Override
+    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
+        decreaseCooldownTick(pStack);
+    }
+
+    // Client stuff
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+        // POSES
         consumer.accept(new IClientItemExtensions() {
             private static final HumanoidModel.ArmPose GUN_AIM = HumanoidModel.ArmPose.create("GUN_AIM", true, (model, entity, arm) -> {
                 if (arm == HumanoidArm.RIGHT) {
@@ -282,7 +334,7 @@ public class GunBase extends Item {
                 }
             });
 
-
+            // Pose setter
             @Override
             public HumanoidModel.ArmPose getArmPose(LivingEntity entityLiving, InteractionHand hand, ItemStack itemStack) {
                 if (!itemStack.isEmpty()) {
@@ -297,69 +349,86 @@ public class GunBase extends Item {
         });
     }
 
+    // Set aiming animation
     public void setAimAnimation(ItemStack gun) {
         gun.getOrCreateTag().putBoolean("IsAiming", true);
     }
+    // Set reloading animation
     public void setReloadAnimation(ItemStack gun) {
         gun.getOrCreateTag().putBoolean("IsAiming", false);
     }
+    // Get should animate
+    public boolean getShouldAim(ItemStack gun) {
+        return gun.getOrCreateTag().getBoolean("IsAiming");
+    }
 
+    // Get ammo cooldown ticks
     public int ammoCooldown(LivingEntity ply, ItemStack gun) {
         return ammoCooldownTicks;
     }
-
+    // Get shoot cooldown ticks
     public int shootCooldown(LivingEntity ply, ItemStack gun) {
         return shootCooldownTicks;
     }
 
+    // Check if user should be able to press trigger (and try to shoot)
     public boolean allowPressingTrigger(Level pLevel, LivingEntity pPlayer, ItemStack gun, InteractionHand pUsedHand) {
         return true;
     }
-
+    // Check if user should be abble to shoot (after pressing trigger)
     public boolean tryShoot(Level pLevel, LivingEntity pPlayer, ItemStack gun, InteractionHand pUsedHand) {
-        return true;
+        return calculateHookSum("tryShoot", pPlayer, gun, 1) != 0;
     }
 
+    // When try shoot failed
     public void onTryFailure(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
     }
 
+    // Get base NBT modifier
     public float getModifier(ItemStack gun, String modifierName) {
         if (!gun.getOrCreateTag().contains(modifierName)) {
             gun.getTag().putFloat(modifierName, 1.0F);
         }
         return gun.getTag().getFloat(modifierName);
     }
+    // Increase/Decrease modifier
     public void multiplyModifier(ItemStack gun, String modifierName, float n) {
         float current = gun.getOrCreateTag().contains(modifierName) ? gun.getTag().getFloat(modifierName) : 1.0F;
 
         gun.getTag().putFloat(modifierName, current * n);
     }
 
+    // Calculate propellant (projectile speed) modifier
     public float propellantModifier(LivingEntity shooter, ItemStack gun) {
         float baseValue = getModifier(gun, "propellantModifier");
         return calculateHookSum("calculatePropellantModifier", shooter, gun, baseValue);
     }
 
+    // Calculate damage modifier
     public float damageModifier(LivingEntity shooter, ItemStack gun) {
         float baseValue = getModifier(gun, "damageModifier");
         return calculateHookSum("calculateDamageModifier", shooter, gun, baseValue);
     }
 
+    // Calculate recoil X modifier
     public float recoilModifierX(LivingEntity id, ItemStack gun) {
         float baseValue = getModifier(gun, "recoilX");
         return calculateHookSum("calculateRecoilModifierX", id, gun, baseValue);
     }
 
+    // Calculate recoil Y modifier
     public float recoilModifierY(LivingEntity id, ItemStack gun) {
         float baseValue = getModifier(gun, "recoilY");
         return calculateHookSum("calculateRecoilModifierY", id, gun, baseValue);
     }
 
+    // Calculate accuracy modifier
     public float accuracyModifier(LivingEntity id, ItemStack gun) {
         float baseValue = getModifier(gun, "accuracy");
         return calculateHookSum("calculateAccuracyModifier", id, gun, baseValue);
     }
 
+    // Yeah, I won't comment those
     public void multiplyPropellantModifier(ItemStack gun, float n) {
         multiplyModifier(gun, "propellantModifier", n);
     }
@@ -376,22 +445,68 @@ public class GunBase extends Item {
         multiplyModifier(gun, "accuracyModifier", n);
     }
 
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
+    // Shoot function (NOT ON HOOK, THIS IS INTERNAL CODE WITH ACTUAL SHOOTING)
+    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
         triggerHooks("onShoot", pPlayer, gunStack);
+        onShoot(rotationX,rotationY, pLevel, pPlayer, gunStack);
     }
 
-    public void onShoot(Level pLevel, LivingEntity shooter, ItemStack gunStack) {
-        if (shooter instanceof Player) {
-            ((Player) shooter).getCooldowns().addCooldown(this, shootCooldown(shooter, gunStack));
-        }
+    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
+        shoot(pLevel, pPlayer, gunStack, CameraWork.getPlayerViewX(pPlayer),CameraWork.getPlayerViewY(pPlayer));
     }
 
+    // On shoot function, called when shoot fired.
+    public void onShoot(float rotationX, float rotationY, Level pLevel, LivingEntity shooter, ItemStack gunStack) {
+        setCooldown(shooter, gunStack, shootCooldown(shooter, gunStack));
+    }
+
+    // When ammo put
     public void onAmmo(Level pLevel, LivingEntity shooter, ItemStack gun, ItemStack ammo ,InteractionHand pUsedHand) {
-        if (shooter instanceof Player) {
-            ((Player) shooter).getCooldowns().addCooldown(this, ammoCooldown(shooter, gun));
-        }
+        setCooldown(shooter, gun, ammoCooldown(shooter, gun));
     }
 
+    // Main Interaction, RMB
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
+        ItemStack secondItemStack;
+        if (pUsedHand == InteractionHand.MAIN_HAND)
+            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
+        else
+            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+
+        if (!pLevel.isClientSide()) {
+            if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
+
+            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
+                if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
+                    shoot(pLevel, pPlayer, gunStack);
+                } else {
+                    onTryFailure(pLevel, pPlayer, gunStack);
+                }
+            }
+
+        }
+
+        return true;
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+        ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
+
+        if (!checkCooldown(gunStack)) {
+            return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
+        }
+
+        ItemStack secondItemStack;
+        if (pUsedHand == InteractionHand.MAIN_HAND)
+            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
+        else
+            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
+
+        interaction(pLevel, pPlayer, gunStack, pUsedHand, false, 0, 0);
+
+        return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
+    }
 
     @Override
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {

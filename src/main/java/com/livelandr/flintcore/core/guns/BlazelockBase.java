@@ -18,6 +18,7 @@
  */
 package com.livelandr.flintcore.core.guns;
 
+import com.livelandr.flintcore.Flintcore;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
@@ -26,6 +27,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -45,36 +47,25 @@ public class BlazelockBase extends GunBase {
     public boolean needCocking = false;
 
     public void onCocking(Level pLevel, LivingEntity shooter, ItemStack gun) {
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, shootCooldown(ply, gun));
-        }
+        setCooldown(shooter, gun, shootCooldown(shooter, gun));
     }
 
-    public void onChamberOpen(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
+    public void onChamberOpen(Level pLevel, LivingEntity shooter, ItemStack gun) {
         gun.getTag().putBoolean("IsCocked", false);
         setReloadAnimation(gun);
-
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, cooldownTicks);
-        }
+        setCooldown(shooter, gun, cooldownTicks);
     }
 
-    public void onChamberClose(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-
+    public void onChamberClose(Level pLevel, LivingEntity shooter, ItemStack gun) {
         setAimAnimation(gun);
-
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, cooldownTicks);
-        }
+        setCooldown(shooter, gun, cooldownTicks);
     }
 
     public void onAmmoInsert(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
         pLevel.playSeededSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 1.0F, 0);
 
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, shootCooldown(ply, gun));
-        }
+        setCooldown(shooter, gun, shootCooldown(shooter, gun));
     }
 
     public int GetMaxAmmoAmount(ItemStack gun) {
@@ -85,7 +76,7 @@ public class BlazelockBase extends GunBase {
         return gun.getTag().getInt("Ammo");
     }
 
-    public void AddAmmo(Player shooter, ItemStack gun, ItemStack ammo) {
+    public void AddAmmo(LivingEntity shooter, ItemStack gun, ItemStack ammo) {
         BaseAmmo ammoType = (BaseAmmo) ammo.getItem();
         int totalInClip = ammoType.ammoCountInOne(ammo);
 
@@ -106,9 +97,12 @@ public class BlazelockBase extends GunBase {
 
         if (totalInClip > 0) {
             ammoStack.setCount(totalInClip);
-            if (!shooter.getInventory().add(ammoStack)) {
-                shooter.drop(ammoStack, false);
+            if (shooter instanceof Player ply) {
+                if (!ply.getInventory().add(ammoStack)) {
+                    ply.drop(ammoStack, false);
+                }
             }
+
         }
 
         ammo.shrink(1);
@@ -126,14 +120,14 @@ public class BlazelockBase extends GunBase {
         return ammo;
     }
 
+
     @Override
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
-
-
+    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
         BaseAmmo ammo = GetFirstAmmo(gunStack);
 
         gunStack.getTag().putBoolean("IsCocked", false);
-        ammo.onAmmoShot(pPlayer, gunStack, pLevel);
+        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
 
         if (GetAmmoAmount(gunStack) == 0) gunStack.getTag().putBoolean("ShootReady", false);
     }
@@ -145,11 +139,14 @@ public class BlazelockBase extends GunBase {
         return true;
     }
 
-    @Override
-    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        // Getting hand and offhand item
-        ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
+    public void openChamber(LivingEntity ply, ItemStack gun) {
+        gun.getTag().putBoolean("ChamberOpen", true);
+        onChamberOpen(ply.level(), ply, gun);
+    }
 
+    // TODO: Fix all this noodle code, it's so f ugly I can't
+    @Override
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
         ItemStack secondItemStack;
         if (pUsedHand == InteractionHand.MAIN_HAND)
             secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
@@ -163,16 +160,15 @@ public class BlazelockBase extends GunBase {
             if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
                 this.setAttachment(pPlayer, gunStack, secondItemStack);
 
-                return InteractionResultHolder.success(pPlayer.getItemInHand(pUsedHand));
+                return true;
             }
 
             // If everything is done - shoot
-            if (gunStack.getTag().getBoolean("ShootReady")) {
+            if (gunStack.getTag().getBoolean("ShootReady") && !gunStack.getTag().getBoolean("ChamberOpen")) {
                 if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
                     if (!needCocking || gunStack.getTag().getBoolean("IsCocked")) {
                         if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
                             shoot(pLevel, pPlayer, gunStack);
-                            onShoot(pLevel, pPlayer, gunStack);
                         } else {
                             onTryFailure(pLevel, pPlayer, gunStack);
                             gunStack.getTag().putBoolean("ShootReady", false);
@@ -187,29 +183,28 @@ public class BlazelockBase extends GunBase {
                 if (gunStack.getTag().getBoolean("ChamberOpen")) {
                     // If ammo is less than max
                     if (GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
-                        if (checkAmmo(secondItemStack.getItem())) {
+                        if (checkAmmoCompatibility(secondItemStack.getItem())) {
                             AddAmmo(pPlayer, gunStack, secondItemStack);
                             onAmmoInsert(pLevel, pPlayer, gunStack, pUsedHand);
                         } else {
                             gunStack.getTag().putBoolean("ChamberOpen", false);
-                            onChamberClose(pLevel, pPlayer, gunStack, pUsedHand);
+                            onChamberClose(pLevel, pPlayer, gunStack);
                             gunStack.getTag().putBoolean("ShootReady", true);
                         }
                     } else {
                         gunStack.getTag().putBoolean("ChamberOpen", false);
-                        onChamberClose(pLevel, pPlayer, gunStack, pUsedHand);
+                        onChamberClose(pLevel, pPlayer, gunStack);
                         gunStack.getTag().putBoolean("ShootReady", true);
                     }
 
-                    return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
+                    return true;
                 } else {
-                    onChamberOpen(pLevel, pPlayer, gunStack, pUsedHand);
-                    gunStack.getTag().putBoolean("ChamberOpen", true);
+                    openChamber(pPlayer, gunStack);
                 }
             }
         }
 
-        return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
+        return true;
     }
 
 

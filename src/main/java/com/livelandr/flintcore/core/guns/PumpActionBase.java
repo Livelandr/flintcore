@@ -23,6 +23,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -42,9 +43,7 @@ public class PumpActionBase extends GunBase {
     public int maxAmmo = 6;
 
     public void OnCockStart(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-        if (shooter instanceof Player) {
-            ((Player) shooter).getCooldowns().addCooldown(this, 5);
-        }
+        setCooldown(shooter, gun, 5);
     }
 
     public void OnCockEnd(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) { }
@@ -57,7 +56,7 @@ public class PumpActionBase extends GunBase {
         return gun.getTag().getInt("Ammo");
     }
 
-    public void AddAmmo(Player shooter, ItemStack gun, ItemStack ammo) {
+    public void AddAmmo(LivingEntity shooter, ItemStack gun, ItemStack ammo) {
         BaseAmmo ammoType = (BaseAmmo) ammo.getItem();
         int totalInClip = ammoType.ammoCountInOne(ammo);
 
@@ -78,8 +77,10 @@ public class PumpActionBase extends GunBase {
 
         if (totalInClip > 0) {
             ammoStack.setCount(totalInClip);
-            if (!shooter.getInventory().add(ammoStack)) {
-                shooter.drop(ammoStack, false);
+            if (shooter instanceof Player ply) {
+                if (!ply.getInventory().add(ammoStack)) {
+                    ply.drop(ammoStack, false);
+                }
             }
         }
 
@@ -106,19 +107,15 @@ public class PumpActionBase extends GunBase {
     }
 
     @Override
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
-        super.shoot(pLevel, pPlayer, gunStack);
+    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
         BaseAmmo ammo = GetFirstAmmo(gunStack);
 
-        ammo.onAmmoShot(pPlayer, gunStack, pLevel);
+        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-
-        // Getting hand and offhand item
-        ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
-
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
         ItemStack secondItemStack;
         if (pUsedHand == InteractionHand.MAIN_HAND)
             secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
@@ -132,10 +129,10 @@ public class PumpActionBase extends GunBase {
             // Attachment
             if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
                 this.setAttachment(pPlayer, gunStack, secondItemStack);
-                return InteractionResultHolder.success(pPlayer.getItemInHand(pUsedHand));
+                return true;
             }
 
-            if (!needCockToReload && checkAmmo(secondItemStack.getItem()) && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
+            if (!needCockToReload && checkAmmoCompatibility(secondItemStack.getItem()) && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                 AddAmmo(pPlayer, gunStack, secondItemStack);
                 onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
             } else if (!gunStack.getTag().getBoolean("IsUncocked")) {
@@ -144,7 +141,6 @@ public class PumpActionBase extends GunBase {
                         // Shoot
                         if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
                             shoot(pLevel, pPlayer, gunStack);
-                            onShoot(pLevel, pPlayer, gunStack);
                         } else {
                             onTryFailure(pLevel, pPlayer, gunStack);
                         }
@@ -155,7 +151,7 @@ public class PumpActionBase extends GunBase {
                     OnCockStart(pLevel, pPlayer, gunStack, pUsedHand);
                 }
             } else {
-                if (needCockToReload && checkAmmo(secondItemStack.getItem()) && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
+                if (needCockToReload && checkAmmoCompatibility(secondItemStack.getItem()) && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                     AddAmmo(pPlayer, gunStack, secondItemStack);
                     onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
                 } else {
@@ -167,7 +163,7 @@ public class PumpActionBase extends GunBase {
             }
         }
 
-        return InteractionResultHolder.consume(pPlayer.getItemInHand(pUsedHand));
+        return true;
     }
 
     @Override

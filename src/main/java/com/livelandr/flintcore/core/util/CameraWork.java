@@ -19,12 +19,15 @@
 package com.livelandr.flintcore.core.util;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Entity;
 import com.livelandr.flintcore.core.network.PacketHandler;
 import com.livelandr.flintcore.core.network.packets.S2C_RecoilCameraOffsetPacket;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 
 public class CameraWork {
-    public static void OffsetEntityCamera(LivingEntity player, float Xrot, float Yrot) {
+    public static void OffsetEntityCamera(Entity player, float Xrot, float Yrot) {
+        if (!(player instanceof Player)) return;
         if (!player.level().isClientSide()) {
             PacketHandler.sendToPlayer(new S2C_RecoilCameraOffsetPacket(Xrot, Yrot), (ServerPlayer) player);
         }

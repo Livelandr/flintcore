@@ -24,7 +24,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -42,14 +41,15 @@ public class FlintlockBase extends GunBase {
     }
 
     public boolean noCock = false;
+    public boolean noStuff = false;
     public int GunpowderRequired = 1;
     public int ramrodCooldownTicks = 20;
     public int gunpowderCooldownTicks = 20;
 
-    public int gunpowderCooldown(Player ply, ItemStack gunStack) {
+    public int gunpowderCooldown(LivingEntity ply, ItemStack gunStack) {
         return gunpowderCooldownTicks;
     }
-    public int ramrodCooldown(Player ply, ItemStack gunStack) {
+    public int ramrodCooldown(LivingEntity ply, ItemStack gunStack) {
         return ramrodCooldownTicks;
     }
 
@@ -57,35 +57,37 @@ public class FlintlockBase extends GunBase {
         pLevel.playSeededSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
                 SoundEvents.SAND_BREAK, SoundSource.NEUTRAL, 1F, 1.0F, 0);
 
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, gunpowderCooldown(ply, gun));
-        }
+        setCooldown(shooter, gun, gunpowderCooldown(shooter, gun));
+    }
+
+    public void setSkipCock(boolean n) {
+        noCock = n;
+    }
+
+    public void setSkipStuff(boolean n) {
+        noStuff = n;
     }
 
     public void onStuff(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
         setAimAnimation(gun);
 
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, ramrodCooldown(ply, gun));
-        }
+        setCooldown(shooter, gun, ramrodCooldown(shooter, gun));
     }
 
     public void onCock(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
         setAimAnimation(gun);
 
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, shootCooldown(ply, gun));
-        }
+        setCooldown(shooter, gun, shootCooldown(shooter, gun));
     }
 
     @Override
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
-        super.shoot(pLevel, pPlayer, gunStack);
+    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
 
         ItemStack ammoData = ItemStack.of((CompoundTag) gunStack.getTag().get("AmmoType"));
 
         BaseAmmo ammo = (BaseAmmo) ammoData.getItem();
-        ammo.onAmmoShot(pPlayer, gunStack, pLevel);
+        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
 
         gunStack.getTag().putInt("Gunpowder", 0);
         gunStack.getTag().putBoolean("HasAmmo", false);
@@ -98,12 +100,12 @@ public class FlintlockBase extends GunBase {
     public boolean isRamrod(ItemStack item) {
         return true;
     }
+    public boolean isGunpowder(ItemStack item) {
+        return item.is(Tags.Items.GUNPOWDER);
+    }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        // Getting hand and offhand item
-        ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
-
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
         ItemStack secondItemStack;
         if (pUsedHand == InteractionHand.MAIN_HAND)
             secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
@@ -116,15 +118,14 @@ public class FlintlockBase extends GunBase {
             // Attachment
             if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
                 this.setAttachment(pPlayer, gunStack, secondItemStack);
-                return InteractionResultHolder.success(pPlayer.getItemInHand(pUsedHand));
+                return true;
             }
 
             // If everything is done - shoot
-            if (gunStack.getTag().getBoolean("IsCocked") || (noCock && gunStack.getTag().getBoolean("IsStuffed"))) {
+            if (gunStack.getTag().getBoolean("HasAmmo") && gunStack.getTag().getInt("Gunpowder") >= GunpowderRequired && (gunStack.getTag().getBoolean("IsCocked") || (noCock && gunStack.getTag().getBoolean("IsStuffed")) || (noStuff && noCock))) {
                 if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
                     if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
                         shoot(pLevel, pPlayer, gunStack);
-                        onShoot(pLevel, pPlayer, gunStack);
                     } else {
                         onTryFailure(pLevel, pPlayer, gunStack);
                     }
@@ -134,7 +135,7 @@ public class FlintlockBase extends GunBase {
         // Try to add gunpowder if isn't added
         if (gunStack.getTag().getInt("Gunpowder") < GunpowderRequired) {
             // Add gunpowder
-            if (secondItemStack.is(Tags.Items.GUNPOWDER)) {
+            if (isGunpowder(secondItemStack)) {
                 gunStack.getTag().putInt("Gunpowder", gunStack.getTag().getInt("Gunpowder")+1);
                 secondItemStack.shrink(1);
                 onGunpowder(pLevel, pPlayer, gunStack, pUsedHand);
@@ -142,17 +143,17 @@ public class FlintlockBase extends GunBase {
         } else {
             // Try to add ammo
             if (!gunStack.getTag().getBoolean("HasAmmo")) {
-                if (checkAmmo(secondItemStack.getItem())) {
+                if (checkAmmoCompatibility(secondItemStack.getItem())) {
                     // Putting Ammo
                     CompoundTag ammoData = secondItemStack.serializeNBT();
                     gunStack.getTag().put("AmmoType", ammoData);
                     gunStack.getTag().putBoolean("HasAmmo", true);
 
                     secondItemStack.shrink(1);
-                    onAmmo(pLevel, pPlayer, secondItemStack, gunStack, pUsedHand);
+                    onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
                 }
             } else {
-                if (!gunStack.getTag().getBoolean("IsStuffed")) {
+                if (!gunStack.getTag().getBoolean("IsStuffed") && !noStuff) {
                     if (isRamrod(secondItemStack)) {
                         gunStack.getTag().putBoolean("IsStuffed", true);
                         onStuff(pLevel, pPlayer, gunStack, pUsedHand);
@@ -170,9 +171,8 @@ public class FlintlockBase extends GunBase {
         }
         }
 
-        return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
+        return true;
     }
-
 
     @Override
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {

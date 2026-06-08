@@ -20,6 +20,7 @@
 package com.livelandr.flintcore;
 
 import com.livelandr.flintcore.core.network.PacketHandler;
+import com.livelandr.flintcore.core.sounds.ModSoundDeferred;
 import com.livelandr.flintcore.core.util.ServerTickHandler;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.common.MinecraftForge;
@@ -45,6 +46,7 @@ public class Flintcore
 
         modEventBus.addListener(this::commonSetup);
 
+        ModSoundDeferred.register(modEventBus);
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(ServerTickHandler.INSTANCE);
 

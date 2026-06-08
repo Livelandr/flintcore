@@ -24,6 +24,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -55,36 +56,28 @@ public class MagfedBase extends GunBase {
 
     // Events
     public void onSlideStart(Level pLevel, LivingEntity shooter, ItemStack gun) {
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, 10);
-        }
+        setCooldown(shooter, gun, 10);
     }
 
     public void onSlideEnd(Level pLevel, LivingEntity shooter, ItemStack gun) {
         setAimAnimation(gun);
 
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, 15);
-        }
+        setCooldown(shooter, gun, 15);
     }
 
     public void onMagExtract(Level pLevel, LivingEntity shooter, ItemStack gun) {
         setReloadAnimation(gun);
 
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, 15);
-        }
+        setCooldown(shooter, gun, 15);
     }
 
     public void onMagInsert(Level pLevel, LivingEntity shooter, ItemStack gun) {
-        if (shooter instanceof Player ply) {
-            ply.getCooldowns().addCooldown(this, 15);
-        }
+        setCooldown(shooter, gun, 15);
     }
 
     // Events end
 
-    public void InsertMagazine(Player ply, ItemStack gun, ItemStack mag) {
+    public void InsertMagazine(LivingEntity ply, ItemStack gun, ItemStack mag) {
         if (gun.getTag().getBoolean("HaveMag")) return;
 
         ((BaseMagazine) mag.getItem()).copyToGun(mag, gun);
@@ -98,7 +91,7 @@ public class MagfedBase extends GunBase {
         onMagInsert(ply.level(), ply, gun);
     }
 
-    public void ExtractMagazine(Player ply, ItemStack gun) {
+    public void ExtractMagazine(LivingEntity ent, ItemStack gun) {
         if (!gun.getTag().getBoolean("HaveMag")) return;
 
         CompoundTag nbt = (CompoundTag) gun.getTag().get("Magazine");
@@ -109,15 +102,16 @@ public class MagfedBase extends GunBase {
 
         BaseMagazine.SetFromGun(magazineStack, gun);
 
-        if (!ply.getInventory().add(magazineStack)) {
-            ply.drop(magazineStack, false);
+        if (ent instanceof Player ply) {
+            if (!ply.getInventory().add(magazineStack)) {
+                ply.drop(magazineStack, false);
+            }
         }
-
         // Not neccessary, but just for safety
         gun.getTag().putInt("AmmoCount", 0);
         gun.getTag().putInt("MaxAmmoCount", 0);
 
-        onMagExtract(ply.level(), ply, gun);
+        onMagExtract(ent.level(), ent, gun);
     }
 
     public int GetAmmoAmount(ItemStack gun) {
@@ -138,9 +132,14 @@ public class MagfedBase extends GunBase {
         return ammoData;
     }
 
+    @Nullable
     public BaseAmmo GetFirstAmmo(ItemStack gun) {
         int curAmmo = gun.getTag().getInt("AmmoCount");
         ItemStack ammoData = ItemStack.of((CompoundTag) gun.getTag().get("A" + (curAmmo-1)));
+
+        if (!(ammoData.getItem() instanceof BaseAmmo)) {
+            return null;
+        }
 
         BaseAmmo ammo = (BaseAmmo) ammoData.getItem();
 
@@ -179,7 +178,10 @@ public class MagfedBase extends GunBase {
     }
 
     public void loadToChamber(ItemStack gun) {
-        putInChamber(gun, new ItemStack(GetFirstAmmo(gun)));
+        BaseAmmo ammo = GetFirstAmmo(gun);
+        if (ammo != null) {
+            putInChamber(gun, new ItemStack(ammo));
+        }
     }
 
     // Chamber stuff end
@@ -189,12 +191,12 @@ public class MagfedBase extends GunBase {
     }
 
     @Override
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
-         super.shoot(pLevel, pPlayer, gunStack);
-         BaseAmmo ammo = (BaseAmmo) ejectChamberStack(gunStack).getItem();
+    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
+        BaseAmmo ammo = (BaseAmmo) ejectChamberStack(gunStack).getItem();
 
-         ammo.onAmmoShot(pPlayer, gunStack, pLevel);
-         if (chamberLoaded(gunStack)) gunStack.getTag().putBoolean("ShootReady", false);
+        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        if (chamberLoaded(gunStack)) gunStack.getTag().putBoolean("ShootReady", false);
     }
 
     @Override
@@ -205,9 +207,7 @@ public class MagfedBase extends GunBase {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        // Getting hand and offhand item
-        ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
+    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY) {
 
         ItemStack secondItemStack;
         if (pUsedHand == InteractionHand.MAIN_HAND)
@@ -221,7 +221,7 @@ public class MagfedBase extends GunBase {
             // Attachment
             if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
                 this.setAttachment(pPlayer, gunStack, secondItemStack);
-                return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
+                return true;
             }
 
             // I'm sleep-deprived hi
@@ -230,7 +230,6 @@ public class MagfedBase extends GunBase {
                     if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
                         if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
                             shoot(pLevel, pPlayer, gunStack);
-                            onShoot(pLevel, pPlayer, gunStack);
 
                             if (needSlideAfterShot) {
                                 gunStack.getTag().putBoolean("SlideCocked", false);
@@ -268,7 +267,7 @@ public class MagfedBase extends GunBase {
             }
         }
 
-        return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
+        return true;
     }
 
 

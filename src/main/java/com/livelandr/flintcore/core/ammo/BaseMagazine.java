@@ -49,7 +49,7 @@ public class BaseMagazine extends Item {
     public int maxAmmo = 30;
 
     public BaseMagazine(Properties pProperties) {
-        super(pProperties);
+        super(pProperties.stacksTo(1));
     }
 
     public Set<String> getAllCaliberTags() {return allowedCalibersTags;}
