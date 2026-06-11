@@ -220,10 +220,7 @@ public class MagfedBase extends GunBase {
             else
                 secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
         } else {
-            if (pUsedHand == InteractionHand.MAIN_HAND)
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
-            else
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+            secondItemStack = proxyUser.getItemInHand(pUsedHand);
         }
 
         if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
@@ -236,13 +233,9 @@ public class MagfedBase extends GunBase {
         // I'm sleep-deprived hi
         if (gunStack.getTag().getBoolean("ShootReady") || (chamberLoaded(gunStack) && !checkMagazine(secondItemStack))) {
             if (gunStack.getTag().getBoolean("HaveMag") || chamberLoaded(gunStack)) {
-                if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
-                    if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                                        if (proxy) {
-                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
-                } else {
-                    shoot(pLevel, pPlayer, gunStack);
-                }
+                if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
+                    if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
+                        shoot(pLevel, pPlayer, gunStack);
 
                         if (needSlideAfterShot) {
                             gunStack.getTag().putBoolean("SlideCocked", false);

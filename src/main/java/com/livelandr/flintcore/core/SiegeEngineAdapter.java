@@ -18,6 +18,9 @@ public class SiegeEngineAdapter {
     public ItemStack getGun() {
         return gun;
     }
+    public GunBase getGunBase() {
+        return GunBase.getGunBase(getGun());
+    }
 
     public void setScapegoat(LivingEntity _scape) {
         scapegoatEnt = _scape;

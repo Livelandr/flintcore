@@ -127,10 +127,7 @@ public class PumpActionBase extends GunBase {
             else
                 secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
         } else {
-            if (pUsedHand == InteractionHand.MAIN_HAND)
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
-            else
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+            secondItemStack = proxyUser.getItemInHand(pUsedHand);
         }
 
 
@@ -148,14 +145,10 @@ public class PumpActionBase extends GunBase {
                 onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
             } else if (!gunStack.getTag().getBoolean("IsUncocked")) {
                 if (gunStack.getTag().getBoolean("ReadyToShoot")) {
-                    if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
+                    if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
                         // Shoot
-                        if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                                            if (proxy) {
-                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
-                } else {
-                    shoot(pLevel, pPlayer, gunStack);
-                }
+                        if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
+                            shoot(pLevel, pPlayer, gunStack);
                         } else {
                             onTryFailure(pLevel, pPlayer, gunStack);
                         }

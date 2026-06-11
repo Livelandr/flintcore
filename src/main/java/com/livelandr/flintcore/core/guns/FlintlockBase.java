@@ -55,8 +55,8 @@ public class FlintlockBase extends GunBase {
     }
 
     public void onGunpowder(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-        pLevel.playSeededSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
-                SoundEvents.SAND_BREAK, SoundSource.NEUTRAL, 1F, 1.0F, 0);
+        pLevel.playSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
+                SoundEvents.SAND_BREAK, SoundSource.NEUTRAL, 1F, 1.0F);
 
         setCooldown(shooter, gun, gunpowderCooldown(shooter, gun));
     }
@@ -115,16 +115,14 @@ public class FlintlockBase extends GunBase {
 
         ItemStack secondItemStack;
 
+
         if (!proxy) {
             if (pUsedHand == InteractionHand.MAIN_HAND)
                 secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
             else
                 secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
         } else {
-            if (pUsedHand == InteractionHand.MAIN_HAND)
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
-            else
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+            secondItemStack = proxyUser.getItemInHand(pUsedHand);
         }
             
         if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
@@ -137,13 +135,9 @@ public class FlintlockBase extends GunBase {
 
         // If everything is done - shoot
         if (gunStack.getTag().getBoolean("HasAmmo") && gunStack.getTag().getInt("Gunpowder") >= GunpowderRequired && (gunStack.getTag().getBoolean("IsCocked") || (noCock && gunStack.getTag().getBoolean("IsStuffed")) || (noStuff && noCock))) {
-            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
-                if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                if (proxy) {
-                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
-                } else {
+            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
+                if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
                     shoot(pLevel, pPlayer, gunStack);
-                }
                 } else {
                     onTryFailure(pLevel, pPlayer, gunStack);
                 }

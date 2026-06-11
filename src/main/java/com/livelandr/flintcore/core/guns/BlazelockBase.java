@@ -62,8 +62,8 @@ public class BlazelockBase extends GunBase {
     }
 
     public void onAmmoInsert(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-        pLevel.playSeededSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
-                SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 1.0F, 0);
+        pLevel.playSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
+                SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 1);
 
         setCooldown(shooter, gun, shootCooldown(shooter, gun));
     }
@@ -158,10 +158,7 @@ public class BlazelockBase extends GunBase {
             else
                 secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
         } else {
-            if (pUsedHand == InteractionHand.MAIN_HAND)
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.OFF_HAND);
-            else
-                secondItemStack = proxyUser.getItemInHand(InteractionHand.MAIN_HAND);            
+            secondItemStack = proxyUser.getItemInHand(pUsedHand);
         }
 
         if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
@@ -169,20 +166,15 @@ public class BlazelockBase extends GunBase {
         // Attachment
         if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
             this.setAttachment(pPlayer, gunStack, secondItemStack);
-
             return true;
         }
 
         // If everything is done - shoot
         if (gunStack.getTag().getBoolean("ShootReady") && !gunStack.getTag().getBoolean("ChamberOpen")) {
-            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand)) {
+            if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
                 if (!needCocking || gunStack.getTag().getBoolean("IsCocked")) {
-                    if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand)) {
-                                        if (proxy) {
-                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
-                } else {
-                    shoot(pLevel, pPlayer, gunStack);
-                }
+                    if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
+                        shoot(pLevel, pPlayer, gunStack);
                     } else {
                         onTryFailure(pLevel, pPlayer, gunStack);
                         gunStack.getTag().putBoolean("ShootReady", false);

@@ -35,6 +35,7 @@ import java.util.Set;
 
 public class BaseAmmo extends Item {
 
+    public boolean showTier = false;
     public int tier = 0;
     public Set<String> requiredCaliberTags = new HashSet<>();
 
@@ -65,7 +66,7 @@ public class BaseAmmo extends Item {
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
         if (!customDescription) {
             pTooltipComponents.add(Component.literal(""));
-            pTooltipComponents.add(Component.translatable("flintcore.weapontier").append(Integer.toString(tier)));
+            if (showTier) pTooltipComponents.add(Component.translatable("flintcore.weapontier").append(Integer.toString(tier)));
             pTooltipComponents.add(Component.translatable("flintcore.ammoinfotags"));
             for (String ammo : this.requiredCaliberTags) {
                 pTooltipComponents.add(Component.literal("   ").append(Component.translatable("flintcore.calibernames." + ammo)));
