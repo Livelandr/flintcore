@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Set;
 
 public class BaseMagazine extends Item {
-    public List<Item> allowedAmmo = new ArrayList<>();
 
     // Guns requirements
     public Set<String> requiredMagazineTags = new HashSet<>();

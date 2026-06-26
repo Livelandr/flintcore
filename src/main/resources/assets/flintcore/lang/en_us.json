@@ -13,6 +13,7 @@
   "flintcore.uncocked": "[UNCOCKED]",
   "flintcore.cocked": "[COCKED]",
   "flintcore.not_stuffed": "Not stuffed",
+  "flintcore.not_ignited": "Not ignited",
   "flintcore.ready_to_shoot": "Ready to shoot",
 
   "flintcore.attachment": "Attachment: ",

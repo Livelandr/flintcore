@@ -43,6 +43,7 @@ import net.minecraftforge.common.util.Lazy;
 import com.livelandr.flintcore.core.FlintcoreHook;
 import com.livelandr.flintcore.core.ammo.BaseAmmo;
 import com.livelandr.flintcore.core.attachments.AttachmentBase;
+import org.jetbrains.annotations.ApiStatus;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -446,11 +447,13 @@ public class GunBase extends Item {
     }
 
     // Shoot function (NOT ON HOOK, THIS IS INTERNAL CODE WITH ACTUAL SHOOTING)
+    @ApiStatus.Internal
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
         triggerHooks("onShoot", pPlayer, gunStack);
         onShoot(rotationX,rotationY, pLevel, pPlayer, gunStack);
     }
 
+    @ApiStatus.Internal
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
         shoot(pLevel, pPlayer, gunStack, CameraWork.getPlayerViewX(pPlayer),CameraWork.getPlayerViewY(pPlayer));
     }
@@ -485,7 +488,11 @@ public class GunBase extends Item {
 
         if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
             if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
-                shoot(pLevel, pPlayer, gunStack);
+                if (!proxy) {
+    shoot(pLevel, pPlayer, gunStack);
+} else {
+    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+}
             } else {
                 onTryFailure(pLevel, pPlayer, gunStack);
             }
@@ -496,19 +503,9 @@ public class GunBase extends Item {
     }
 
     @Override
+    @ApiStatus.Internal
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-
         ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
-
-        if (!checkCooldown(gunStack)) {
-            return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
-        }
-
-        ItemStack secondItemStack;
-        if (pUsedHand == InteractionHand.MAIN_HAND)
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.OFF_HAND);
-        else
-            secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
         interaction(pLevel, pPlayer, gunStack, pUsedHand, false, 0, 0, null);
 

@@ -27,6 +27,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.ApiStatus;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ public class BaseAmmo extends Item {
 
     public boolean showTier = false;
     public int tier = 0;
+    @ApiStatus.Internal
     public Set<String> requiredCaliberTags = new HashSet<>();
 
     public float damage = 0;

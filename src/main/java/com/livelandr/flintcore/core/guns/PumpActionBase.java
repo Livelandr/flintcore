@@ -148,7 +148,11 @@ public class PumpActionBase extends GunBase {
                     if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
                         // Shoot
                         if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
-                            shoot(pLevel, pPlayer, gunStack);
+                            if (!proxy) {
+    shoot(pLevel, pPlayer, gunStack);
+} else {
+    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+}
                         } else {
                             onTryFailure(pLevel, pPlayer, gunStack);
                         }
