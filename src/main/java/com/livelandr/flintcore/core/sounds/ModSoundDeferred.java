@@ -16,7 +16,7 @@ public class ModSoundDeferred {
     public static final RegistryObject<SoundEvent> BROWNNOISE = registerSoundEvents("brownnoise");
 
     public static RegistryObject<SoundEvent> registerSoundEvents(String name) {
-        return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(fromNamespaceAndPath(Flintcore.MOD_ID, name)));
+        return SOUND_EVENTS.register(name, () -> SoundEvent.createFixedRangeEvent(fromNamespaceAndPath(Flintcore.MOD_ID, name), 16.0F));
     }
 
     public static void register(IEventBus eventBus) {

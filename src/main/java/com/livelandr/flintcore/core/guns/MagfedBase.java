@@ -236,10 +236,10 @@ public class MagfedBase extends GunBase {
                 if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
                     if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
                         if (!proxy) {
-    shoot(pLevel, pPlayer, gunStack);
-} else {
-    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
-}
+                            shoot(pLevel, pPlayer, gunStack);
+                        } else {
+                            shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                        }
 
                         if (needSlideAfterShot) {
                             gunStack.getTag().putBoolean("SlideCocked", false);
