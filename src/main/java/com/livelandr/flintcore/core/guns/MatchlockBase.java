@@ -22,7 +22,10 @@ public class MatchlockBase extends FlintlockBase {
         super(pProperties);
     }
 
-    public void onIgnition(Level level, LivingEntity ply, ItemStack gun) {}
+    public void onIgnition(Level level, LivingEntity ply, ItemStack gun) {
+        setCooldown(ply, gun, 5);
+        level.playSound(null, ply, SoundEvents.TNT_PRIMED, SoundSource.NEUTRAL, 1, 1);
+    }
 
     public boolean isIgniter(ItemStack item) {
         return item.is(Items.FLINT_AND_STEEL);
@@ -131,7 +134,7 @@ public class MatchlockBase extends FlintlockBase {
     public void onInventoryTick(ItemStack stack, Level level, Player player, int slotIndex, int selectedIndex) {
         if (player.isUnderWater() && stack.getTag().getBoolean("IsIgnited") ) {
             stack.getTag().putBoolean("IsIgnited", false);
-            level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL, 1, 1);
+            level.playSound(null, player, SoundEvents.FIRE_EXTINGUISH, SoundSource.NEUTRAL, 1, 1);
         }
         super.onInventoryTick(stack, level, player, slotIndex, selectedIndex);
     }
@@ -139,35 +142,13 @@ public class MatchlockBase extends FlintlockBase {
 
     @Override
     public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
-        //super.appendHoverText(pStack, pLevel, pTooltipComponents, pIsAdvanced);
+        super.appendHoverText(pStack, pLevel, pTooltipComponents, pIsAdvanced);
 
         // Statuses
-        if (pLevel != null) {
-            if (pStack.getOrCreateTag().getInt("Gunpowder") < gunpowderRequired) {
-                pTooltipComponents.add(Component.translatable("flintcore.gunpowder").append(
-                        String.valueOf(pStack.getTag().getInt("Gunpowder"))).append("/").append(String.valueOf(gunpowderRequired)).withStyle(ChatFormatting.RED));
-            } else {
-                pTooltipComponents.add(Component.translatable("flintcore.gunpowder").append(
-                        String.valueOf(pStack.getTag().getInt("Gunpowder"))).append("/").append(String.valueOf(gunpowderRequired)).withStyle(ChatFormatting.DARK_GREEN));
-                if (!pStack.getTag().getBoolean("HasAmmo")) {
-                    pTooltipComponents.add(Component.translatable("flintcore.no_payload").withStyle(ChatFormatting.RED));
-                } else {
-                    ItemStack ammoData = ItemStack.of((CompoundTag) pStack.getTag().get("AmmoType"));
-
-                    pTooltipComponents.add(Component.translatable("flintcore.payload").append(ammoData.getDisplayName()).withStyle(ChatFormatting.DARK_GREEN));
-                    if (!pStack.getTag().getBoolean("IsStuffed")) {
-                        pTooltipComponents.add(Component.translatable("flintcore.not_stuffed").withStyle(ChatFormatting.RED));
-                    } else {
-                        if (!pStack.getTag().getBoolean("IsIgnited")) {
-                            pTooltipComponents.add(Component.translatable("flintcore.not_ignited").withStyle(ChatFormatting.RED));
-                        } else {
-                            pTooltipComponents.add(Component.translatable("flintcore.ready_to_shoot").withStyle(ChatFormatting.DARK_GREEN));
-                        }
-                    }
-                }
-            }
-
-
+        if (!pStack.getTag().getBoolean("IsIgnited")) {
+            pTooltipComponents.add(Component.translatable("flintcore.not_ignited").withStyle(ChatFormatting.RED));
+        } else {
+            pTooltipComponents.add(Component.translatable("flintcore.ready_to_shoot").withStyle(ChatFormatting.DARK_GREEN));
         }
     }
 }

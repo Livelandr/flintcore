@@ -60,7 +60,6 @@ public class MagfedBase extends GunBase {
     }
 
     public void onSlideEnd(Level pLevel, LivingEntity shooter, ItemStack gun) {
-        setAimAnimation(gun);
 
         setCooldown(shooter, gun, 15);
     }
@@ -72,6 +71,7 @@ public class MagfedBase extends GunBase {
     }
 
     public void onMagInsert(Level pLevel, LivingEntity shooter, ItemStack gun) {
+        setAimAnimation(gun);
         setCooldown(shooter, gun, 15);
     }
 

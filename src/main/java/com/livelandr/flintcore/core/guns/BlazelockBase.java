@@ -62,7 +62,7 @@ public class BlazelockBase extends GunBase {
     }
 
     public void onAmmoInsert(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-        pLevel.playSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
+        pLevel.playSound(null, shooter,
                 SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 1);
 
         setCooldown(shooter, gun, shootCooldown(shooter, gun));

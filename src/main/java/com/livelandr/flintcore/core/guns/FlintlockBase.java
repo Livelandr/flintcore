@@ -54,7 +54,7 @@ public class FlintlockBase extends GunBase {
     }
 
     public void onGunpowder(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-        pLevel.playSound(null, shooter.getBlockX(), shooter.getBlockY(), shooter.getBlockZ(),
+        pLevel.playSound(null, shooter,
                 SoundEvents.SAND_BREAK, SoundSource.NEUTRAL, 1F, 1.0F);
 
         setCooldown(shooter, gun, gunpowderCooldown(shooter, gun));

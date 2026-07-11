@@ -33,10 +33,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.util.Lazy;
@@ -304,7 +301,7 @@ public class GunBase extends Item {
                     model.rightArm.z = -1;
 
                     model.leftArm.xRot = model.head.xRot - (float) Math.PI / 2F;
-                    model.leftArm.yRot = model.head.yRot / 2F + (float) Math.PI / 4F ;
+                    model.leftArm.yRot = model.body.yRot / 2F + (float) Math.PI / 4F ;
                 } else {
                     model.leftArm.xRot = model.head.xRot - (float) Math.PI / 2F;
                     model.leftArm.yRot = model.head.yRot;
@@ -502,13 +499,31 @@ public class GunBase extends Item {
         return true;
     }
 
+
+    @Override
+    @ApiStatus.Internal
+    public void onUseTick(Level pLevel, LivingEntity pLivingEntity, ItemStack pStack, int pRemainingUseDuration) {
+        InteractionHand hand = pLivingEntity.getUsedItemHand();
+
+        interaction(pLevel, pLivingEntity, pStack, hand, false, 0, 0, null);
+
+        super.onUseTick(pLevel, pLivingEntity, pStack, pRemainingUseDuration);
+    }
+
+    @Override
+    public UseAnim getUseAnimation(ItemStack pStack) {
+        return UseAnim.NONE;
+    }
+
+    @Override
+    public int getUseDuration(ItemStack pStack) {
+        return 72000;
+    }
+
     @Override
     @ApiStatus.Internal
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        ItemStack gunStack = pPlayer.getItemInHand(pUsedHand);
-
-        interaction(pLevel, pPlayer, gunStack, pUsedHand, false, 0, 0, null);
-
+        pPlayer.startUsingItem(pUsedHand);
         return InteractionResultHolder.pass(pPlayer.getItemInHand(pUsedHand));
     }
 
