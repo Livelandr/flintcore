@@ -310,7 +310,7 @@ public class GunBase extends Item {
                     model.leftArm.z = -1;
 
                     model.rightArm.xRot = model.head.xRot - (float) Math.PI / 2F;
-                    model.rightArm.yRot = model.head.yRot / 2F - (float) Math.PI / 4F ;
+                    model.rightArm.yRot = model.body.yRot / 2F - (float) Math.PI / 4F ;
                 }
             });
 
