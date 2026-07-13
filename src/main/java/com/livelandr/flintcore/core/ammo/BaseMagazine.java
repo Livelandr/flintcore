@@ -26,6 +26,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -66,8 +67,8 @@ public class BaseMagazine extends Item {
         return checkCaliberCompatibility(ammo.requiredCaliberTags);
     }
 
-    public void onAmmoInsert(ItemStack mag) {}
-    public void onAmmoExtract(ItemStack mag) {}
+    public void onAmmoInsert(LivingEntity ply, ItemStack mag) {}
+    public void onAmmoExtract(LivingEntity ply, ItemStack mag) {}
 
     public void copyToGun(ItemStack mag, ItemStack gun) {
         gun.getTag().putInt("AmmoCount", BaseMagazine.getAmmo(mag));
@@ -90,7 +91,7 @@ public class BaseMagazine extends Item {
     }
 
     // Not optimal, but well, it works
-    public void addAmmo(ItemStack mag, ItemStack ammo) {
+    public void addAmmo(LivingEntity ply, ItemStack mag, ItemStack ammo) {
         int curAmmo = getAmmo(mag);
 
         CompoundTag ammoData = ammo.serializeNBT();
@@ -99,7 +100,7 @@ public class BaseMagazine extends Item {
         mag.getTag().putInt("AmmoCount", curAmmo+1);
 
         ammo.shrink(1);
-        onAmmoInsert(mag);
+        onAmmoInsert(ply, mag);
     }
 
     public static ItemStack getNAmmo(ItemStack mag, int n) {
@@ -113,12 +114,12 @@ public class BaseMagazine extends Item {
         return getNAmmo(mag,getAmmo(mag)-1);
     }
 
-    public ItemStack extractLastAmmo(ItemStack mag) {
+    public ItemStack extractLastAmmo(LivingEntity ply, ItemStack mag) {
         int curAmmo = getAmmo(mag);
         ItemStack ammo = getLastAmmo(mag);
         ammo.setCount(1);
         mag.getTag().putInt("AmmoCount", curAmmo-1);
-        onAmmoExtract(mag);
+        onAmmoExtract(ply, mag);
         return ammo;
     }
 
@@ -143,25 +144,13 @@ public class BaseMagazine extends Item {
             secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
         if (!pPlayer.isCrouching()) {
-
             if (allowAmmo(secondItemStack) && getAmmo(magStack) < getMaxAmmo(magStack)) {
-                addAmmo(magStack, secondItemStack);
-                pPlayer.getCooldowns().addCooldown(this, 2);
-                if (pLevel.isClientSide()) {
-                    pLevel.playLocalSound(pPlayer.getX(), pPlayer.getY(), pPlayer.getZ(),
-                            SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 1.0F, false);
-                }
+                addAmmo(pPlayer, magStack, secondItemStack);
             }
         } else if (getAmmo(magStack) > 0) {
-            pPlayer.getCooldowns().addCooldown(this, 2);
-            if (pLevel.isClientSide()) {
-                pLevel.playLocalSound(pPlayer.getX(), pPlayer.getY(), pPlayer.getZ(),
-                        SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 1.0F, false);
-            } else {
-                ItemStack item = extractLastAmmo(magStack);
-                if (!pPlayer.getInventory().add(item)) {
-                    pPlayer.drop(item, false);
-                }
+            ItemStack item = extractLastAmmo(pPlayer, magStack);
+            if (!pPlayer.getInventory().add(item)) {
+                pPlayer.drop(item, false);
             }
         }
 

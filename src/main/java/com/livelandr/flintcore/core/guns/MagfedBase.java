@@ -108,6 +108,7 @@ public class MagfedBase extends GunBase {
             }
         }
         // Not neccessary, but just for safety
+        gun.getTag().put("Magazine", (new ItemStack(Items.AIR)).serializeNBT() );
         gun.getTag().putInt("AmmoCount", 0);
         gun.getTag().putInt("MaxAmmoCount", 0);
 
