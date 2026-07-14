@@ -130,10 +130,21 @@ public class GunBase extends Item {
         });
     }
 
+
     @Override
     public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
         if (slotChanged) return true;
-        return false;
+        if (!(newStack.getItem() instanceof GunBase)) return true;
+
+        CompoundTag oldTags = oldStack.getTag().copy();
+        CompoundTag newTags = newStack.getTag().copy();
+
+        oldTags.putInt("cooldownTicks", 0);
+        newTags.putInt("cooldownTicks", 0);
+
+        if (oldTags.equals(newTags)) return false;
+
+        return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
     }
 
     // Tier-Tag

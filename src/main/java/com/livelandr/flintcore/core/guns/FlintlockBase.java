@@ -111,6 +111,11 @@ public class FlintlockBase extends GunBase {
     }
 
     @Override
+    public void onTryFailure(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
+        setCooldown(pPlayer, gunStack, 10);
+    }
+
+    @Override
     public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
         if (!checkCooldown(gunStack)) {
             return false;
