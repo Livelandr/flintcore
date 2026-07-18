@@ -1,6 +1,8 @@
 package com.livelandr.flintcore.core.guns;
 
 import com.livelandr.flintcore.core.ammo.BaseGunpowder;
+import com.livelandr.flintcore.core.util.HookContext;
+import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -34,10 +36,9 @@ public class MatchlockBase extends FlintlockBase {
 
     @Override
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float floatX, float floatY) {
-        super.shoot(pLevel, pPlayer, gunStack, floatX, floatY);
-
         gunStack.getTag().putBoolean("IsIgnited", false);
         setCooldown(pPlayer, gunStack, ramrodCooldown(pPlayer, gunStack));
+        super.shoot(pLevel, pPlayer, gunStack, floatX, floatY);
     }
 
     @Override
@@ -97,7 +98,8 @@ public class MatchlockBase extends FlintlockBase {
         } else {
             // Try to add ammo
             if (!gunStack.getTag().getBoolean("HasAmmo")) {
-                if (checkAmmoCompatibility(secondItemStack.getItem())) {
+                if (checkAmmoCompatibility(secondItemStack.getItem())
+                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) {
                     // Putting Ammo
                     CompoundTag ammoData = secondItemStack.serializeNBT();
                     gunStack.getTag().put("AmmoType", ammoData);

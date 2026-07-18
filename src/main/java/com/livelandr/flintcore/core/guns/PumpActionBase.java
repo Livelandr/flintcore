@@ -112,7 +112,6 @@ public class PumpActionBase extends GunBase {
 
     @Override
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
-        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
         BaseAmmo ammo = GetFirstAmmo(gunStack);
 
         if (HookSystem.calculateHookBool(new HookContext.Builder("processShooting")
@@ -125,6 +124,8 @@ public class PumpActionBase extends GunBase {
 
            ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
         }
+
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
     }
 
     @Override
@@ -153,7 +154,9 @@ public class PumpActionBase extends GunBase {
                 return true;
             }
 
-            if (!needCockToReload && checkAmmoCompatibility(secondItemStack.getItem()) && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
+            if (!needCockToReload && (checkAmmoCompatibility(secondItemStack.getItem())
+                    || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build()))
+                && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                 AddAmmo(pPlayer, gunStack, secondItemStack);
                 onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
             } else if (!gunStack.getTag().getBoolean("IsUncocked")) {
@@ -176,7 +179,10 @@ public class PumpActionBase extends GunBase {
                     OnCockStart(pLevel, pPlayer, gunStack, pUsedHand);
                 }
             } else {
-                if (needCockToReload && checkAmmoCompatibility(secondItemStack.getItem()) && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
+                if (needCockToReload &&
+                (checkAmmoCompatibility(secondItemStack.getItem())
+                || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build()))
+                && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                     AddAmmo(pPlayer, gunStack, secondItemStack);
                     onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
                 } else {

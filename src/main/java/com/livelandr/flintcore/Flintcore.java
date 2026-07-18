@@ -19,6 +19,7 @@
 
 package com.livelandr.flintcore;
 
+import com.livelandr.flintcore.core.ammo.BaseAmmo;
 import com.livelandr.flintcore.core.network.PacketHandler;
 import com.livelandr.flintcore.core.sounds.ModSoundDeferred;
 import com.livelandr.flintcore.core.util.HookSystem;
@@ -26,6 +27,7 @@ import com.livelandr.flintcore.core.util.ServerTickHandler;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -54,6 +56,11 @@ public class Flintcore
         MinecraftForge.EVENT_BUS.register(ServerTickHandler.INSTANCE);
 
         PacketHandler.register();
+
+        HookSystem.addHook(HookSystem.AMMO_COMPATIBILITY_OVERRIDE, context1 -> {
+            Item i = context1.getAmmoType();
+            return (i instanceof BaseAmmo) ? 1 : 0;
+        });
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

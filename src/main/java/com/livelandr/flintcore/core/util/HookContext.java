@@ -2,6 +2,7 @@ package com.livelandr.flintcore.core.util;
 
 import com.livelandr.flintcore.core.ammo.BaseAmmo;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
@@ -13,7 +14,7 @@ public class HookContext {
     private ItemStack gun;
     private float rotationX;
     private float rotationY;
-    private BaseAmmo ammoType;
+    private Item ammoType;
 
     private HookContext(Builder builder) {
         this.id = builder.id;
@@ -44,7 +45,7 @@ public class HookContext {
         return rotationY;
     }
 
-    public BaseAmmo getAmmoType() {
+    public Item getAmmoType() {
         return ammoType;
     }
 
@@ -57,7 +58,7 @@ public class HookContext {
         private ItemStack gun;
         private float rotationX;
         private float rotationY;
-        private BaseAmmo ammoType;
+        private Item ammoType;
 
         public Builder(String systemId) {
             this.id = systemId;
@@ -83,7 +84,7 @@ public class HookContext {
             return this;
         }
 
-        public Builder ammoType(BaseAmmo ammoType) {
+        public Builder ammoType(Item ammoType) {
             this.ammoType = ammoType;
             return this;
         }

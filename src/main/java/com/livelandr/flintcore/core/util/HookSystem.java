@@ -11,15 +11,16 @@ import java.util.Map;
 
 public class HookSystem {
 
-    public static String CALCULATE_DAMAGE_MODIFIER = "calculateDamageModifier";
-    public static String CALCULATE_RECOIL_MODIFIER_X = "calculateRecoilModifierX";
-    public static String CALCULATE_RECOIL_MODIFIER_Y = "calculateRecoilModifierY";
-    public static String CALCULATE_PROPELLANT_MODIFIER = "calculatePropellantModifier";
-    public static String CALCULATE_ACCURACY_MODIFIER = "calculateAccuracyModifier";
-    public static String ALLOW_PRESSING_TRIGGER = "allowPressingTrigger";
-    public static String TRY_SHOOT = "tryShoot";
-    public static String ON_SHOOT = "onShoot";
-    public static String PROCESS_SHOOTING = "processShooting";
+    public static String CALCULATE_DAMAGE_MODIFIER = "CALCULATE_DAMAGE_MODIFIER";
+    public static String CALCULATE_RECOIL_MODIFIER_X = "CALCULATE_RECOIL_MODIFIER_X";
+    public static String CALCULATE_RECOIL_MODIFIER_Y = "CALCULATE_RECOIL_MODIFIER_Y";
+    public static String CALCULATE_PROPELLANT_MODIFIER = "CALCULATE_PROPELLANT_MODIFIER";
+    public static String CALCULATE_ACCURACY_MODIFIER = "CALCULATE_ACCURACY_MODIFIER";
+    public static String AMMO_COMPATIBILITY_OVERRIDE = "AMMO_COMPATIBILITY_OVERRIDE";
+    public static String ALLOW_PRESSING_TRIGGER = "ALLOW_PRESSING_TRIGGER";
+    public static String TRY_SHOOT = "TRY_SHOOT";
+    public static String ON_SHOOT = "ON_SHOOT";
+    public static String PROCESS_SHOOTING = "PROCESS_SHOOTING";
 
     // TODO: REPLACE HOOKS TO OTHER STATIC CLASS
     public static Map<String, List<FlintcoreHook>> hooks = new HashMap<>();
@@ -29,7 +30,7 @@ public class HookSystem {
         hooks.put(CALCULATE_RECOIL_MODIFIER_Y, new ArrayList<>());
         hooks.put(CALCULATE_PROPELLANT_MODIFIER, new ArrayList<>());
         hooks.put(CALCULATE_ACCURACY_MODIFIER, new ArrayList<>());
-
+        hooks.put(AMMO_COMPATIBILITY_OVERRIDE, new ArrayList<>());
         hooks.put(ALLOW_PRESSING_TRIGGER, new ArrayList<>());
         hooks.put(TRY_SHOOT, new ArrayList<>());
         hooks.put(ON_SHOOT, new ArrayList<>());

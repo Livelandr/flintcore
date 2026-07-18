@@ -128,7 +128,6 @@ public class BlazelockBase extends GunBase {
 
     @Override
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
-        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
         BaseAmmo ammo = GetFirstAmmo(gunStack);
 
         gunStack.getTag().putBoolean("IsCocked", false);
@@ -143,6 +142,7 @@ public class BlazelockBase extends GunBase {
         }
 
         if (GetAmmoAmount(gunStack) == 0) gunStack.getTag().putBoolean("ShootReady", false);
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
     }
 
     @Override
@@ -206,7 +206,8 @@ public class BlazelockBase extends GunBase {
             if (gunStack.getTag().getBoolean("ChamberOpen")) {
                 // If ammo is less than max
                 if (GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
-                    if (checkAmmoCompatibility(secondItemStack.getItem())) {
+                if (checkAmmoCompatibility(secondItemStack.getItem())
+                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) {
                         AddAmmo(pPlayer, gunStack, secondItemStack);
                         onAmmoInsert(pLevel, pPlayer, gunStack, pUsedHand);
                     } else {

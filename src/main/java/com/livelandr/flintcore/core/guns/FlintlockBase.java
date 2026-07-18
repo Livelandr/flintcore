@@ -90,7 +90,6 @@ public class FlintlockBase extends GunBase {
 
     @Override
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
-        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
 
         ItemStack ammoData = ItemStack.of((CompoundTag) gunStack.getTag().get("AmmoType"));
 
@@ -113,6 +112,7 @@ public class FlintlockBase extends GunBase {
         }
 
         setReloadAnimation(gunStack);
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
     }
 
     public boolean isRamrod(ItemStack item) {
@@ -185,7 +185,9 @@ public class FlintlockBase extends GunBase {
 
             // Try to add ammo
             if (!gunStack.getTag().getBoolean("HasAmmo")) {
-                if (checkAmmoCompatibility(secondItemStack.getItem())) {
+                // Check vanilla and overrides ammo
+                if (checkAmmoCompatibility(secondItemStack.getItem())
+                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) {
                     // Putting Ammo
                     CompoundTag ammoData = secondItemStack.serializeNBT();
                     gunStack.getTag().put("AmmoType", ammoData);

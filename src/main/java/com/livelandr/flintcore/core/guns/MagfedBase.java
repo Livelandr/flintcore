@@ -193,7 +193,6 @@ public class MagfedBase extends GunBase {
 
     @Override
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
-        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
         BaseAmmo ammo = (BaseAmmo) ejectChamberStack(gunStack).getItem();
 
         if (HookSystem.calculateHookBool(new HookContext.Builder("processShooting")
@@ -206,6 +205,7 @@ public class MagfedBase extends GunBase {
            ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
         }
         if (chamberLoaded(gunStack)) gunStack.getTag().putBoolean("ShootReady", false);
+        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
     }
 
     @Override

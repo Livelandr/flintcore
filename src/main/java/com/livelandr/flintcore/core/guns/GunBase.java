@@ -20,6 +20,7 @@ package com.livelandr.flintcore.core.guns;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.livelandr.flintcore.Flintcore;
 import com.livelandr.flintcore.core.util.CameraWork;
 import com.livelandr.flintcore.core.util.HookContext;
 import com.livelandr.flintcore.core.util.HookSystem;
@@ -27,6 +28,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.*;
@@ -443,7 +445,6 @@ public class GunBase extends Item {
     // Shoot function (NOT ON HOOK, THIS IS INTERNAL CODE WITH ACTUAL SHOOTING)
     @ApiStatus.Internal
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
-
         HookSystem.triggerHooks(new HookContext.Builder(HookSystem.ON_SHOOT)
                 .shooter(pPlayer)
                 .gun(gunStack)
@@ -457,9 +458,15 @@ public class GunBase extends Item {
         shoot(pLevel, pPlayer, gunStack, CameraWork.getPlayerViewX(pPlayer),CameraWork.getPlayerViewY(pPlayer));
     }
 
+    public void itemBreakEvent(LivingEntity entity) {
+
+    }
+
     // On shoot function, called when shoot fired.
     public void onShoot(float rotationX, float rotationY, Level pLevel, LivingEntity shooter, ItemStack gunStack) {
         setCooldown(shooter, gunStack, shootCooldown(shooter, gunStack));
+
+        gunStack.hurtAndBreak(1, shooter, this::itemBreakEvent);
     }
 
     // When ammo put
