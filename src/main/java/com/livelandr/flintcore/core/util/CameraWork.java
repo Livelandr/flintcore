@@ -34,9 +34,9 @@ public class CameraWork {
     }
     // Future VR Mod compatibility investment
     public static float getPlayerViewX(LivingEntity ply) {
-        return ply.getXRot();
+        return ply.getViewXRot(0);
     }
     public static float getPlayerViewY(LivingEntity ply) {
-        return ply.getYRot();
+        return ply.getViewYRot(0);
     }
 }

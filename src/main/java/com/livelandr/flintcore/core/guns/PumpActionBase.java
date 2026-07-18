@@ -18,6 +18,8 @@
  */
 package com.livelandr.flintcore.core.guns;
 
+import com.livelandr.flintcore.core.util.HookContext;
+import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -43,10 +45,12 @@ public class PumpActionBase extends GunBase {
     public int maxAmmo = 6;
 
     public void OnCockStart(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-        setCooldown(shooter, gun, 5);
+        
     }
 
-    public void OnCockEnd(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) { }
+    public void OnCockEnd(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
+        
+    }
 
     public int GetMaxAmmoAmount(ItemStack gun) {
         return ((PumpActionBase) gun.getItem()).maxAmmo;
@@ -111,7 +115,16 @@ public class PumpActionBase extends GunBase {
         super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
         BaseAmmo ammo = GetFirstAmmo(gunStack);
 
-        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        if (HookSystem.calculateHookBool(new HookContext.Builder("processShooting")
+                .shooter(pPlayer)
+                .gun(gunStack)
+                .rotationX(rotationX)
+                .rotationY(rotationY)
+                .ammoType(ammo)
+                .build())) {
+
+           ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@
 package com.livelandr.flintcore.core.guns;
 
 import com.livelandr.flintcore.core.ammo.BaseGunpowder;
+import com.livelandr.flintcore.core.util.HookContext;
+import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -57,6 +59,7 @@ public class FlintlockBase extends GunBase {
         pLevel.playSound(null, shooter,
                 SoundEvents.SAND_BREAK, SoundSource.NEUTRAL, 1F, 1.0F);
 
+        
         setCooldown(shooter, gun, gunpowderCooldown(shooter, gun));
     }
 
@@ -73,7 +76,8 @@ public class FlintlockBase extends GunBase {
     }
 
     public void onStuff(Level pLevel, LivingEntity shooter, ItemStack gun, InteractionHand pUsedHand) {
-        setAimAnimation(gun);
+        //setAimAnimation(gun);
+        
 
         setCooldown(shooter, gun, ramrodCooldown(shooter, gun));
     }
@@ -91,7 +95,15 @@ public class FlintlockBase extends GunBase {
         ItemStack ammoData = ItemStack.of((CompoundTag) gunStack.getTag().get("AmmoType"));
 
         BaseAmmo ammo = (BaseAmmo) ammoData.getItem();
-        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        if (HookSystem.calculateHookBool(new HookContext.Builder("processShooting")
+                .shooter(pPlayer)
+                .gun(gunStack)
+                .rotationX(rotationX)
+                .rotationY(rotationY)
+                .ammoType(ammo)
+                .build())) {
+            ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        }
 
         if (!pLevel.isClientSide()) {
             gunStack.getTag().putInt("Gunpowder", 0);

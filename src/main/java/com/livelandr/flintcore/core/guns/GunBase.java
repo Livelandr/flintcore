@@ -20,8 +20,9 @@ package com.livelandr.flintcore.core.guns;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.livelandr.flintcore.Flintcore;
 import com.livelandr.flintcore.core.util.CameraWork;
+import com.livelandr.flintcore.core.util.HookContext;
+import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.nbt.CompoundTag;
@@ -37,7 +38,6 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.util.Lazy;
-import com.livelandr.flintcore.core.FlintcoreHook;
 import com.livelandr.flintcore.core.ammo.BaseAmmo;
 import com.livelandr.flintcore.core.attachments.AttachmentBase;
 import org.jetbrains.annotations.ApiStatus;
@@ -62,43 +62,6 @@ public class GunBase extends Item {
     public int ammoCooldownTicks = 20;
 
     // HOOKS SYSTEM
-    // TODO: REPLACE HOOKS TO OTHER STATIC CLASS
-    public static Map<String, List<FlintcoreHook>> hooks = new HashMap<>();
-    static {
-        hooks.put("calculateDamageModifier", new ArrayList<>());
-        hooks.put("calculateRecoilModifierX", new ArrayList<>());
-        hooks.put("calculateRecoilModifierY", new ArrayList<>());
-        hooks.put("calculatePropellantModifier", new ArrayList<>());
-        hooks.put("calculateAccuracyModifier", new ArrayList<>());
-
-        hooks.put("tryShoot", new ArrayList<>());
-        hooks.put("onShoot", new ArrayList<>());
-    }
-    public static float calculateHookSum(String hookName, LivingEntity shooter, ItemStack gun, float baseValue) {
-        List<FlintcoreHook> funcs = hooks.get(hookName);
-        if (funcs == null || funcs.isEmpty()) {
-            return 1;
-        }
-
-        float baseVal = baseValue;
-
-        for (FlintcoreHook hook : funcs) {
-            baseVal *= hook.process(shooter, gun, baseVal);
-        }
-
-        return baseVal;
-    };
-    public static void triggerHooks(String hookName, LivingEntity shooter, ItemStack gun) {
-        List<FlintcoreHook> funcs = hooks.get(hookName);
-        if (funcs == null || funcs.isEmpty()) {
-            return;
-        }
-
-        for (FlintcoreHook hook : funcs) {
-            hook.process(shooter, gun, 0);
-        }
-    }
-    // HOOKS SYSTEM END
 
     // Static thing, just prettier than casting, sadly there is no inline in java (?) :(
     public static GunBase getGunBase(ItemStack gun) {
@@ -128,23 +91,6 @@ public class GunBase extends Item {
 
             return builder.build();
         });
-    }
-
-
-    @Override
-    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-        if (slotChanged) return true;
-        if (!(newStack.getItem() instanceof GunBase)) return true;
-
-        CompoundTag oldTags = oldStack.getTag().copy();
-        CompoundTag newTags = newStack.getTag().copy();
-
-        oldTags.putInt("cooldownTicks", 0);
-        newTags.putInt("cooldownTicks", 0);
-
-        if (oldTags.equals(newTags)) return false;
-
-        return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
     }
 
     // Tier-Tag
@@ -358,6 +304,13 @@ public class GunBase extends Item {
         });
     }
 
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        if (slotChanged) return true;
+
+        return false;
+    }
+
     // Set aiming animation
     public void setAimAnimation(ItemStack gun) {
         gun.getOrCreateTag().putBoolean("IsAiming", true);
@@ -382,11 +335,19 @@ public class GunBase extends Item {
 
     // Check if user should be able to press trigger (and try to shoot)
     public boolean allowPressingTrigger(Level pLevel, LivingEntity pPlayer, ItemStack gun, InteractionHand pUsedHand) {
-        return true;
+        return HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.ALLOW_PRESSING_TRIGGER)
+                .shooter(pPlayer)
+                .gun(gun)
+                .build()
+        );
     }
     // Check if user should be abble to shoot (after pressing trigger)
     public boolean tryShoot(Level pLevel, LivingEntity pPlayer, ItemStack gun, InteractionHand pUsedHand) {
-        return calculateHookSum("tryShoot", pPlayer, gun, 1) != 0;
+        return HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.TRY_SHOOT)
+                .shooter(pPlayer)
+                .gun(gun)
+                .build()
+        );
     }
 
     // When try shoot failed
@@ -410,31 +371,56 @@ public class GunBase extends Item {
     // Calculate propellant (projectile speed) modifier
     public float propellantModifier(LivingEntity shooter, ItemStack gun) {
         float baseValue = getModifier(gun, "propellantModifier");
-        return calculateHookSum("calculatePropellantModifier", shooter, gun, baseValue);
+
+        return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_PROPELLANT_MODIFIER)
+                .shooter(shooter)
+                .gun(gun)
+                .build(), baseValue
+        );
     }
 
     // Calculate damage modifier
     public float damageModifier(LivingEntity shooter, ItemStack gun) {
         float baseValue = getModifier(gun, "damageModifier");
-        return calculateHookSum("calculateDamageModifier", shooter, gun, baseValue);
+
+        return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_DAMAGE_MODIFIER)
+                .shooter(shooter)
+                .gun(gun)
+                .build(), baseValue
+        );
     }
 
     // Calculate recoil X modifier
-    public float recoilModifierX(LivingEntity id, ItemStack gun) {
+    public float recoilModifierX(LivingEntity shooter, ItemStack gun) {
         float baseValue = getModifier(gun, "recoilX");
-        return calculateHookSum("calculateRecoilModifierX", id, gun, baseValue);
+
+        return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_RECOIL_MODIFIER_X)
+                .shooter(shooter)
+                .gun(gun)
+                .build(), baseValue
+        );
     }
 
     // Calculate recoil Y modifier
-    public float recoilModifierY(LivingEntity id, ItemStack gun) {
+    public float recoilModifierY(LivingEntity shooter, ItemStack gun) {
         float baseValue = getModifier(gun, "recoilY");
-        return calculateHookSum("calculateRecoilModifierY", id, gun, baseValue);
+
+        return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_RECOIL_MODIFIER_Y)
+                .shooter(shooter)
+                .gun(gun)
+                .build(), baseValue
+        );
     }
 
     // Calculate accuracy modifier
-    public float accuracyModifier(LivingEntity id, ItemStack gun) {
+    public float accuracyModifier(LivingEntity shooter, ItemStack gun) {
         float baseValue = getModifier(gun, "accuracy");
-        return calculateHookSum("calculateAccuracyModifier", id, gun, baseValue);
+
+        return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_ACCURACY_MODIFIER)
+                .shooter(shooter)
+                .gun(gun)
+                .build(), baseValue
+        );
     }
 
     // Yeah, I won't comment those
@@ -457,7 +443,12 @@ public class GunBase extends Item {
     // Shoot function (NOT ON HOOK, THIS IS INTERNAL CODE WITH ACTUAL SHOOTING)
     @ApiStatus.Internal
     public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
-        triggerHooks("onShoot", pPlayer, gunStack);
+
+        HookSystem.triggerHooks(new HookContext.Builder(HookSystem.ON_SHOOT)
+                .shooter(pPlayer)
+                .gun(gunStack)
+                .build());
+
         onShoot(rotationX,rotationY, pLevel, pPlayer, gunStack);
     }
 
@@ -474,6 +465,7 @@ public class GunBase extends Item {
     // When ammo put
     public void onAmmo(Level pLevel, LivingEntity shooter, ItemStack gun, ItemStack ammo ,InteractionHand pUsedHand) {
         setCooldown(shooter, gun, ammoCooldown(shooter, gun));
+        
     }
 
     // Main Interaction, RMB

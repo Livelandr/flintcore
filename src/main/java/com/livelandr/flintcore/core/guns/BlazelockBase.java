@@ -19,6 +19,8 @@
 package com.livelandr.flintcore.core.guns;
 
 import com.livelandr.flintcore.Flintcore;
+import com.livelandr.flintcore.core.util.HookContext;
+import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
@@ -53,11 +55,13 @@ public class BlazelockBase extends GunBase {
     public void onChamberOpen(Level pLevel, LivingEntity shooter, ItemStack gun) {
         gun.getTag().putBoolean("IsCocked", false);
         setReloadAnimation(gun);
+        
         setCooldown(shooter, gun, cooldownTicks);
     }
 
     public void onChamberClose(Level pLevel, LivingEntity shooter, ItemStack gun) {
         setAimAnimation(gun);
+        
         setCooldown(shooter, gun, cooldownTicks);
     }
 
@@ -65,6 +69,7 @@ public class BlazelockBase extends GunBase {
         pLevel.playSound(null, shooter,
                 SoundEvents.ITEM_PICKUP, SoundSource.NEUTRAL, 1.0F, 1);
 
+        
         setCooldown(shooter, gun, shootCooldown(shooter, gun));
     }
 
@@ -127,7 +132,15 @@ public class BlazelockBase extends GunBase {
         BaseAmmo ammo = GetFirstAmmo(gunStack);
 
         gunStack.getTag().putBoolean("IsCocked", false);
-        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        if (HookSystem.calculateHookBool(new HookContext.Builder("processShooting")
+                .shooter(pPlayer)
+                .gun(gunStack)
+                .rotationX(rotationX)
+                .rotationY(rotationY)
+                .ammoType(ammo)
+                .build())) {
+            ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        }
 
         if (GetAmmoAmount(gunStack) == 0) gunStack.getTag().putBoolean("ShootReady", false);
     }
@@ -175,10 +188,10 @@ public class BlazelockBase extends GunBase {
                 if (!needCocking || gunStack.getTag().getBoolean("IsCocked")) {
                     if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
                         if (!proxy) {
-    shoot(pLevel, pPlayer, gunStack);
-} else {
-    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
-}
+                            shoot(pLevel, pPlayer, gunStack);
+                        } else {
+                            shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                        }
                     } else {
                         onTryFailure(pLevel, pPlayer, gunStack);
                         gunStack.getTag().putBoolean("ShootReady", false);

@@ -18,6 +18,8 @@
  */
 package com.livelandr.flintcore.core.guns;
 
+import com.livelandr.flintcore.core.util.HookContext;
+import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
@@ -60,13 +62,11 @@ public class MagfedBase extends GunBase {
     }
 
     public void onSlideEnd(Level pLevel, LivingEntity shooter, ItemStack gun) {
-
         setCooldown(shooter, gun, 15);
     }
 
     public void onMagExtract(Level pLevel, LivingEntity shooter, ItemStack gun) {
         setReloadAnimation(gun);
-
         setCooldown(shooter, gun, 15);
     }
 
@@ -196,7 +196,15 @@ public class MagfedBase extends GunBase {
         super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
         BaseAmmo ammo = (BaseAmmo) ejectChamberStack(gunStack).getItem();
 
-        ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        if (HookSystem.calculateHookBool(new HookContext.Builder("processShooting")
+                .shooter(pPlayer)
+                .gun(gunStack)
+                .rotationX(rotationX)
+                .rotationY(rotationY)
+                .ammoType(ammo)
+                .build())) {
+           ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
+        }
         if (chamberLoaded(gunStack)) gunStack.getTag().putBoolean("ShootReady", false);
     }
 

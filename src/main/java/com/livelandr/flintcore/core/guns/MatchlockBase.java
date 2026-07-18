@@ -25,6 +25,7 @@ public class MatchlockBase extends FlintlockBase {
     public void onIgnition(Level level, LivingEntity ply, ItemStack gun) {
         setCooldown(ply, gun, 5);
         level.playSound(null, ply, SoundEvents.TNT_PRIMED, SoundSource.NEUTRAL, 1, 1);
+        
     }
 
     public boolean isIgniter(ItemStack item) {
