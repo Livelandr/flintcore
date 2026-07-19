@@ -17,6 +17,7 @@ public class HookSystem {
     public static String CALCULATE_PROPELLANT_MODIFIER = "CALCULATE_PROPELLANT_MODIFIER";
     public static String CALCULATE_ACCURACY_MODIFIER = "CALCULATE_ACCURACY_MODIFIER";
     public static String AMMO_COMPATIBILITY_OVERRIDE = "AMMO_COMPATIBILITY_OVERRIDE";
+    public static String AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE = "AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE";
     public static String ALLOW_PRESSING_TRIGGER = "ALLOW_PRESSING_TRIGGER";
     public static String TRY_SHOOT = "TRY_SHOOT";
     public static String ON_SHOOT = "ON_SHOOT";
@@ -31,6 +32,7 @@ public class HookSystem {
         hooks.put(CALCULATE_PROPELLANT_MODIFIER, new ArrayList<>());
         hooks.put(CALCULATE_ACCURACY_MODIFIER, new ArrayList<>());
         hooks.put(AMMO_COMPATIBILITY_OVERRIDE, new ArrayList<>());
+        hooks.put(AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE, new ArrayList<>());
         hooks.put(ALLOW_PRESSING_TRIGGER, new ArrayList<>());
         hooks.put(TRY_SHOOT, new ArrayList<>());
         hooks.put(ON_SHOOT, new ArrayList<>());

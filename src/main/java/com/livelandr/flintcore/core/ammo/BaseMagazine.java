@@ -18,6 +18,8 @@
  */
 package com.livelandr.flintcore.core.ammo;
 
+import com.livelandr.flintcore.core.util.HookContext;
+import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
@@ -144,7 +146,7 @@ public class BaseMagazine extends Item {
             secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
         if (!pPlayer.isCrouching()) {
-            if (allowAmmo(secondItemStack) && getAmmo(magStack) < getMaxAmmo(magStack)) {
+            if ((allowAmmo(secondItemStack) || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE).gun(magStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) && getAmmo(magStack) < getMaxAmmo(magStack)) {
                 addAmmo(pPlayer, magStack, secondItemStack);
             }
         } else if (getAmmo(magStack) > 0) {
