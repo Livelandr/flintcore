@@ -146,7 +146,7 @@ public class BaseMagazine extends Item {
             secondItemStack = pPlayer.getItemInHand(InteractionHand.MAIN_HAND);
 
         if (!pPlayer.isCrouching()) {
-            if ((allowAmmo(secondItemStack) || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE).gun(magStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) && getAmmo(magStack) < getMaxAmmo(magStack)) {
+            if ((allowAmmo(secondItemStack) || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE).gun(magStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0)) && getAmmo(magStack) < getMaxAmmo(magStack)) {
                 addAmmo(pPlayer, magStack, secondItemStack);
             }
         } else if (getAmmo(magStack) > 0) {

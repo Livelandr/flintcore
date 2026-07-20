@@ -340,7 +340,7 @@ public class GunBase extends Item {
         return HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.ALLOW_PRESSING_TRIGGER)
                 .shooter(pPlayer)
                 .gun(gun)
-                .build()
+                .build(), 1
         );
     }
     // Check if user should be abble to shoot (after pressing trigger)
@@ -348,7 +348,7 @@ public class GunBase extends Item {
         return HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.TRY_SHOOT)
                 .shooter(pPlayer)
                 .gun(gun)
-                .build()
+                .build(), 1
         );
     }
 
@@ -377,7 +377,7 @@ public class GunBase extends Item {
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_PROPELLANT_MODIFIER)
                 .shooter(shooter)
                 .gun(gun)
-                .build(), baseValue
+                .build(), baseValue, baseValue
         );
     }
 
@@ -388,7 +388,7 @@ public class GunBase extends Item {
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_DAMAGE_MODIFIER)
                 .shooter(shooter)
                 .gun(gun)
-                .build(), baseValue
+                .build(), baseValue, baseValue
         );
     }
 
@@ -399,7 +399,7 @@ public class GunBase extends Item {
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_RECOIL_MODIFIER_X)
                 .shooter(shooter)
                 .gun(gun)
-                .build(), baseValue
+                .build(), baseValue, baseValue
         );
     }
 
@@ -410,7 +410,7 @@ public class GunBase extends Item {
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_RECOIL_MODIFIER_Y)
                 .shooter(shooter)
                 .gun(gun)
-                .build(), baseValue
+                .build(), baseValue, baseValue
         );
     }
 
@@ -421,7 +421,7 @@ public class GunBase extends Item {
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_ACCURACY_MODIFIER)
                 .shooter(shooter)
                 .gun(gun)
-                .build(), baseValue
+                .build(), baseValue, baseValue
         );
     }
 

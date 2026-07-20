@@ -100,7 +100,7 @@ public class FlintlockBase extends GunBase {
                 .rotationX(rotationX)
                 .rotationY(rotationY)
                 .ammoType(ammo)
-                .build())) {
+                .build(), 1)) {
             ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
         }
 
@@ -187,7 +187,7 @@ public class FlintlockBase extends GunBase {
             if (!gunStack.getTag().getBoolean("HasAmmo")) {
                 // Check vanilla and overrides ammo
                 if (checkAmmoCompatibility(secondItemStack.getItem())
-                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) {
+                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0)) {
                     // Putting Ammo
                     CompoundTag ammoData = secondItemStack.serializeNBT();
                     gunStack.getTag().put("AmmoType", ammoData);

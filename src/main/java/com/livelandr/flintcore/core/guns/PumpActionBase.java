@@ -120,7 +120,7 @@ public class PumpActionBase extends GunBase {
                 .rotationX(rotationX)
                 .rotationY(rotationY)
                 .ammoType(ammo)
-                .build())) {
+                .build(), 1)) {
 
            ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
         }
@@ -155,7 +155,7 @@ public class PumpActionBase extends GunBase {
             }
 
             if (!needCockToReload && (checkAmmoCompatibility(secondItemStack.getItem())
-                    || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build()))
+                    || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0))
                 && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                 AddAmmo(pPlayer, gunStack, secondItemStack);
                 onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
@@ -181,7 +181,7 @@ public class PumpActionBase extends GunBase {
             } else {
                 if (needCockToReload &&
                 (checkAmmoCompatibility(secondItemStack.getItem())
-                || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build()))
+                || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0))
                 && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                     AddAmmo(pPlayer, gunStack, secondItemStack);
                     onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);

@@ -56,11 +56,6 @@ public class Flintcore
         MinecraftForge.EVENT_BUS.register(ServerTickHandler.INSTANCE);
 
         PacketHandler.register();
-
-        HookSystem.addHook(HookSystem.AMMO_COMPATIBILITY_OVERRIDE, context1 -> {
-            Item i = context1.getAmmoType();
-            return (i instanceof BaseAmmo) ? 1 : 0;
-        });
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)

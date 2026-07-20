@@ -137,7 +137,7 @@ public class BlazelockBase extends GunBase {
                 .rotationX(rotationX)
                 .rotationY(rotationY)
                 .ammoType(ammo)
-                .build())) {
+                .build(), 1)) {
             ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
         }
 
@@ -207,7 +207,7 @@ public class BlazelockBase extends GunBase {
                 // If ammo is less than max
                 if (GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                 if (checkAmmoCompatibility(secondItemStack.getItem())
-                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) {
+                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0)) {
                         AddAmmo(pPlayer, gunStack, secondItemStack);
                         onAmmoInsert(pLevel, pPlayer, gunStack, pUsedHand);
                     } else {

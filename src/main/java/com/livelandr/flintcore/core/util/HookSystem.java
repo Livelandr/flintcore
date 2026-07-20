@@ -39,14 +39,14 @@ public class HookSystem {
         hooks.put(PROCESS_SHOOTING, new ArrayList<>());
     }
 
-    public static boolean calculateHookBool(HookContext context) {
-        return (calculateHookSum(context, 1) != 0);
+    public static boolean calculateHookBool(HookContext context, float baseValueNoHooks) {
+        return (calculateHookSum(context, 1, baseValueNoHooks) != 0);
     }
 
-    public static float calculateHookSum(HookContext context, float baseValue) {
+    public static float calculateHookSum(HookContext context, float baseValue, float baseValueNoHooks) {
         List<FlintcoreHook> funcs = hooks.get(context.getContextId());
         if (funcs == null || funcs.isEmpty()) {
-            return 1;
+            return baseValueNoHooks;
         }
 
         float baseVal = baseValue;

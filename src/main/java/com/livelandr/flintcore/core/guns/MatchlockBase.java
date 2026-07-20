@@ -99,7 +99,7 @@ public class MatchlockBase extends FlintlockBase {
             // Try to add ammo
             if (!gunStack.getTag().getBoolean("HasAmmo")) {
                 if (checkAmmoCompatibility(secondItemStack.getItem())
-                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build())) {
+                        || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0)) {
                     // Putting Ammo
                     CompoundTag ammoData = secondItemStack.serializeNBT();
                     gunStack.getTag().put("AmmoType", ammoData);
