@@ -1,5 +1,6 @@
 package com.livelandr.flintcore.core.util;
 
+import com.livelandr.flintcore.Flintcore;
 import com.livelandr.flintcore.core.guns.GunBase;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -49,13 +50,13 @@ public class HookSystem {
             return baseValueNoHooks;
         }
 
-        float baseVal = baseValue;
+        float result = baseValue;
 
         for (FlintcoreHook hook : funcs) {
-            baseVal *= hook.process(context);
+            result *= hook.process(context);
         }
 
-        return baseVal;
+        return result;
     };
 
     public static void triggerHooks(HookContext context) {

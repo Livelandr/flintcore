@@ -101,7 +101,7 @@ public class BaseMagazine extends Item {
         mag.getTag().put("A" + String.valueOf(curAmmo), ammoData);
         mag.getTag().putInt("AmmoCount", curAmmo+1);
 
-        ammo.shrink(1);
+        //ammo.shrink(1);
         onAmmoInsert(ply, mag);
     }
 
@@ -148,6 +148,7 @@ public class BaseMagazine extends Item {
         if (!pPlayer.isCrouching()) {
             if ((allowAmmo(secondItemStack) || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE).gun(magStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0)) && getAmmo(magStack) < getMaxAmmo(magStack)) {
                 addAmmo(pPlayer, magStack, secondItemStack);
+                ((BaseAmmo) secondItemStack.getItem()).onAmmoInsert(pPlayer, magStack, secondItemStack);
             }
         } else if (getAmmo(magStack) > 0) {
             ItemStack item = extractLastAmmo(pPlayer, magStack);

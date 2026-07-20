@@ -102,7 +102,7 @@ public class MagfedBase extends GunBase {
 
         BaseMagazine.SetFromGun(magazineStack, gun);
 
-        if (ent instanceof Player ply) {
+        if (!ent.level().isClientSide() && ent instanceof Player ply) {
             if (!ply.getInventory().add(magazineStack)) {
                 ply.drop(magazineStack, false);
             }

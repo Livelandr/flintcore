@@ -109,8 +109,6 @@ public class BlazelockBase extends GunBase {
             }
 
         }
-
-        ammo.shrink(1);
     }
 
     public BaseAmmo GetFirstAmmo(ItemStack gun) {
@@ -210,6 +208,7 @@ public class BlazelockBase extends GunBase {
                         || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0)) {
                         AddAmmo(pPlayer, gunStack, secondItemStack);
                         onAmmoInsert(pLevel, pPlayer, gunStack, pUsedHand);
+                        ((BaseAmmo) secondItemStack.getItem()).onAmmoInsert(pPlayer, gunStack, secondItemStack);
                     } else {
                         gunStack.getTag().putBoolean("ChamberOpen", false);
                         onChamberClose(pLevel, pPlayer, gunStack);

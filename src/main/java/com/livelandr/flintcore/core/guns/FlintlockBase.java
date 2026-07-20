@@ -193,7 +193,7 @@ public class FlintlockBase extends GunBase {
                     gunStack.getTag().put("AmmoType", ammoData);
                     gunStack.getTag().putBoolean("HasAmmo", true);
 
-                    secondItemStack.shrink(1);
+                    ((BaseAmmo) secondItemStack.getItem()).onAmmoInsert(pPlayer, gunStack, secondItemStack);
                     onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
                 }
             } else {

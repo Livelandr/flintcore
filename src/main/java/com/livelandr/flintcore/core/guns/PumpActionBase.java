@@ -87,8 +87,6 @@ public class PumpActionBase extends GunBase {
                 }
             }
         }
-
-        ammo.shrink(1);
     }
 
     public BaseAmmo GetFirstAmmo(ItemStack gun) {
@@ -145,7 +143,6 @@ public class PumpActionBase extends GunBase {
         }
 
 
-        if (!pLevel.isClientSide()) {
             if (!gunStack.hasTag()) gunStack.setTag(new CompoundTag());
 
             // Attachment
@@ -157,8 +154,11 @@ public class PumpActionBase extends GunBase {
             if (!needCockToReload && (checkAmmoCompatibility(secondItemStack.getItem())
                     || HookSystem.calculateHookBool(new HookContext.Builder(HookSystem.AMMO_COMPATIBILITY_OVERRIDE).gun(gunStack).shooter(pPlayer).ammoType(secondItemStack.getItem()).build(), 0))
                 && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
+
                 AddAmmo(pPlayer, gunStack, secondItemStack);
                 onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
+                ((BaseAmmo) secondItemStack.getItem()).onAmmoInsert(pPlayer, gunStack, secondItemStack);
+
             } else if (!gunStack.getTag().getBoolean("IsUncocked")) {
                 if (gunStack.getTag().getBoolean("ReadyToShoot")) {
                     if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
@@ -185,6 +185,7 @@ public class PumpActionBase extends GunBase {
                 && GetAmmoAmount(gunStack) < GetMaxAmmoAmount(gunStack)) {
                     AddAmmo(pPlayer, gunStack, secondItemStack);
                     onAmmo(pLevel, pPlayer, gunStack, secondItemStack, pUsedHand);
+                    ((BaseAmmo) secondItemStack.getItem()).onAmmoInsert(pPlayer, gunStack, secondItemStack);
                 } else {
                     gunStack.getTag().putBoolean("IsUncocked", false);
                     gunStack.getTag().putBoolean("ReadyToShoot", true);
@@ -192,7 +193,7 @@ public class PumpActionBase extends GunBase {
                     OnCockEnd(pLevel, pPlayer, gunStack, pUsedHand);
                 }
             }
-        }
+
 
         return true;
     }

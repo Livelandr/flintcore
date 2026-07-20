@@ -57,6 +57,10 @@ public class BaseAmmo extends Item {
         onAmmoShot(CameraWork.getPlayerViewX(shooter), CameraWork.getPlayerViewY(shooter), shooter, gun, level);
     }
 
+    public void onAmmoInsert(LivingEntity shooter, ItemStack gun, ItemStack ammo) {
+        ammo.shrink(1);
+    }
+
     public int ammoCountInOne(ItemStack ammo) {
         return 1;
     }
