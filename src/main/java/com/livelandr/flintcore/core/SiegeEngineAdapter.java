@@ -3,8 +3,6 @@ package com.livelandr.flintcore.core;
 import com.livelandr.flintcore.core.guns.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -38,7 +36,7 @@ public class SiegeEngineAdapter {
     }
 
     public void tick() {
-        GunBase.getGunBase(getGun()).decreaseCooldownTick(getGun());
+        GunBase.getGunBase(getGun()).__internal_decreaseCooldownTick(getGun());
     }
 
     public float getRotationX() {
@@ -57,7 +55,7 @@ public class SiegeEngineAdapter {
     }
 
     public void transmitInteraction(Level pLevel, LivingEntity pPlayer, InteractionHand pUsedHand) {
-        GunBase.getGunBase(gun).interaction(pLevel, scapegoatEnt, this.gun, pUsedHand, true, rotationX, rotationY, pPlayer);
+        GunBase.getGunBase(gun).__internal_interaction(pLevel, scapegoatEnt, this.gun, pUsedHand, true, rotationX, rotationY, pPlayer);
     }
 
     public void forceSetAmmo(ItemStack ammo) {
@@ -71,12 +69,12 @@ public class SiegeEngineAdapter {
             gun.getOrCreateTag().putInt("Ammo", 0);
             ((BlazelockBase) gunItem).AddAmmo(null, gun, ammo);
         } else if (gunItem instanceof MagfedBase MB) {
-            MB.InsertMagazine(null, gun, ammo);
+            MB.__internal_InsertMagazine(null, gun, ammo);
         }
     }
 
     public void forceShoot() {
         GunBase gunItem = GunBase.getGunBase(gun);
-        gunItem.shoot(scapegoatEnt.level(), scapegoatEnt, gun, getRotationX(), getRotationY());
+        gunItem.__internal_shoot(scapegoatEnt.level(), scapegoatEnt, gun, getRotationX(), getRotationY());
     }
 }

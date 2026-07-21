@@ -21,7 +21,6 @@ package com.livelandr.flintcore.core.network.packets;
 import com.livelandr.flintcore.core.guns.BlazelockBase;
 import com.livelandr.flintcore.core.guns.MagfedBase;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -49,7 +48,7 @@ public class C2S_ExtractMagazine {
 
         ItemStack weapon = player.getItemInHand(InteractionHand.MAIN_HAND);
         if (weapon.getItem() instanceof MagfedBase gun) {
-            gun.ExtractMagazine(player, weapon);
+            gun.__internal_ExtractMagazine(player, weapon);
         }
         if (weapon.getItem() instanceof BlazelockBase gun) {
             gun.openChamber(player, weapon);

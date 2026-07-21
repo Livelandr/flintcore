@@ -25,8 +25,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -77,7 +75,7 @@ public class MagfedBase extends GunBase {
 
     // Events end
 
-    public void InsertMagazine(LivingEntity ply, ItemStack gun, ItemStack mag) {
+    public void __internal_InsertMagazine(LivingEntity ply, ItemStack gun, ItemStack mag) {
         if (gun.getTag().getBoolean("HaveMag")) return;
 
         ((BaseMagazine) mag.getItem()).copyToGun(mag, gun);
@@ -91,7 +89,7 @@ public class MagfedBase extends GunBase {
         onMagInsert(ply.level(), ply, gun);
     }
 
-    public void ExtractMagazine(LivingEntity ent, ItemStack gun) {
+    public void __internal_ExtractMagazine(LivingEntity ent, ItemStack gun) {
         if (!gun.getTag().getBoolean("HaveMag")) return;
 
         CompoundTag nbt = (CompoundTag) gun.getTag().get("Magazine");
@@ -156,32 +154,32 @@ public class MagfedBase extends GunBase {
         return stack;
     }
 
-    public ItemStack ejectChamberStack(ItemStack gun) {
+    public ItemStack __internal_ejectChamberStack(ItemStack gun) {
         ItemStack stack = getChamberStack(gun);
-        zeroChamber(gun);
+        __internal_zeroChamber(gun);
 
         return stack;
     }
 
-    public boolean chamberLoaded(ItemStack gun) {
+    public boolean __internal_chamberLoaded(ItemStack gun) {
         ItemStack stack = getChamberStack(gun);
         return (stack.getItem() != Items.AIR);
     }
 
-    public void zeroChamber(ItemStack gun) {
+    public void __internal_zeroChamber(ItemStack gun) {
         CompoundTag empty = (new ItemStack(Items.AIR)).serializeNBT();
         gun.getTag().put("Chamber", empty);
     }
 
-    public void putInChamber(ItemStack gun, ItemStack ammo) {
+    public void __internal_putInChamber(ItemStack gun, ItemStack ammo) {
         CompoundTag ammoData = ammo.serializeNBT();
         gun.getTag().put("Chamber", ammoData);
     }
 
-    public void loadToChamber(ItemStack gun) {
+    public void __internal_loadToChamber(ItemStack gun) {
         BaseAmmo ammo = GetFirstAmmo(gun);
         if (ammo != null) {
-            putInChamber(gun, new ItemStack(ammo));
+            __internal_putInChamber(gun, new ItemStack(ammo));
         }
     }
 
@@ -192,8 +190,8 @@ public class MagfedBase extends GunBase {
     }
 
     @Override
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
-        BaseAmmo ammo = (BaseAmmo) ejectChamberStack(gunStack).getItem();
+    public void __internal_shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+        BaseAmmo ammo = (BaseAmmo) __internal_ejectChamberStack(gunStack).getItem();
 
         if (HookSystem.calculateHookBool(new HookContext.Builder("processShooting")
                 .shooter(pPlayer)
@@ -204,21 +202,21 @@ public class MagfedBase extends GunBase {
                 .build(), 1)) {
            ammo.onAmmoShot(rotationX, rotationY, pPlayer, gunStack, pLevel);
         }
-        if (chamberLoaded(gunStack)) gunStack.getTag().putBoolean("ShootReady", false);
-        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
+        if (__internal_chamberLoaded(gunStack)) gunStack.getTag().putBoolean("ShootReady", false);
+        super.__internal_shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
     }
 
     @Override
     public boolean tryShoot(Level pLevel, LivingEntity pPlayer, ItemStack gun, InteractionHand pUsedHand) {
-        if (!chamberLoaded(gun)) return false;
+        if (!__internal_chamberLoaded(gun)) return false;
 
         return true;
     }
 
     @Override
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
-        if (!checkCooldown(gunStack)) {
-            return false;
+    public void __internal_interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!__internal_checkCooldown(gunStack)) {
+            return;
         }
 
         ItemStack secondItemStack;
@@ -237,24 +235,24 @@ public class MagfedBase extends GunBase {
         // Attachment
         if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
             this.setAttachment(pPlayer, gunStack, secondItemStack);
-            return true;
+            return;
         }
         // I'm sleep-deprived hi
-        if (gunStack.getTag().getBoolean("ShootReady") || (chamberLoaded(gunStack) && !checkMagazine(secondItemStack))) {
-            if (gunStack.getTag().getBoolean("HaveMag") || chamberLoaded(gunStack)) {
+        if (gunStack.getTag().getBoolean("ShootReady") || (__internal_chamberLoaded(gunStack) && !checkMagazine(secondItemStack))) {
+            if (gunStack.getTag().getBoolean("HaveMag") || __internal_chamberLoaded(gunStack)) {
                 if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
                     if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
                         if (!proxy) {
-                            shoot(pLevel, pPlayer, gunStack);
+                            __internal_shoot(pLevel, pPlayer, gunStack);
                         } else {
-                            shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                            __internal_shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
                         }
 
                         if (needSlideAfterShot) {
                             gunStack.getTag().putBoolean("SlideCocked", false);
                             gunStack.getTag().putBoolean("ShootReady", false);
                         } else {
-                            loadToChamber(gunStack);
+                            __internal_loadToChamber(gunStack);
                         }
                     } else {
                         onTryFailure(pLevel, pPlayer, gunStack);
@@ -268,10 +266,10 @@ public class MagfedBase extends GunBase {
         } else {
             if (!gunStack.getTag().getBoolean("HaveMag")) {
                 if (checkMagazine(secondItemStack)) {
-                    InsertMagazine(pPlayer, gunStack, secondItemStack);
+                    __internal_InsertMagazine(pPlayer, gunStack, secondItemStack);
                 }
             } else if (GetAmmoAmount(gunStack) <= 0) {
-                ExtractMagazine(pPlayer, gunStack);
+                __internal_ExtractMagazine(pPlayer, gunStack);
             } else if (!gunStack.getTag().getBoolean("SlideCocked")) {
                 gunStack.getTag().putBoolean("SlideCocked", true);
                 onSlideStart(pLevel, pPlayer, gunStack);
@@ -281,12 +279,11 @@ public class MagfedBase extends GunBase {
                 onSlideEnd(pLevel, pPlayer, gunStack);
 
                 // Chamber
-                loadToChamber(gunStack);
+                __internal_loadToChamber(gunStack);
             }
         }
 
 
-        return true;
     }
 
 
@@ -355,7 +352,7 @@ public class MagfedBase extends GunBase {
                 format = ChatFormatting.DARK_RED;
             }
 
-            if (this.chamberLoaded(pStack)) {
+            if (this.__internal_chamberLoaded(pStack)) {
                 pTooltipComponents.add(Component.translatable("flintcore.liveround").withStyle(format));
             } else {
                 pTooltipComponents.add(Component.translatable("flintcore.chamberempty"));

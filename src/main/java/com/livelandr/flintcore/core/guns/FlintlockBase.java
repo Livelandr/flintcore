@@ -89,7 +89,7 @@ public class FlintlockBase extends GunBase {
     }
 
     @Override
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+    public void __internal_shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
 
         ItemStack ammoData = ItemStack.of((CompoundTag) gunStack.getTag().get("AmmoType"));
 
@@ -112,7 +112,7 @@ public class FlintlockBase extends GunBase {
         }
 
         setReloadAnimation(gunStack);
-        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
+        super.__internal_shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
     }
 
     public boolean isRamrod(ItemStack item) {
@@ -128,9 +128,9 @@ public class FlintlockBase extends GunBase {
     }
 
     @Override
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
-        if (!checkCooldown(gunStack)) {
-            return false;
+    public void __internal_interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!__internal_checkCooldown(gunStack)) {
+            return;
         }
 
         ItemStack secondItemStack;
@@ -150,7 +150,7 @@ public class FlintlockBase extends GunBase {
         // Attachment
         if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
             this.setAttachment(pPlayer, gunStack, secondItemStack);
-            return true;
+            return;
         }
 
         // If everything is done - shoot
@@ -158,9 +158,9 @@ public class FlintlockBase extends GunBase {
             if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
                 if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
                     if (!proxy) {
-                        shoot(pLevel, pPlayer, gunStack);
+                        __internal_shoot(pLevel, pPlayer, gunStack);
                     } else {
-                        shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                        __internal_shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
                     }
                 } else {
                     onTryFailure(pLevel, pPlayer, gunStack);
@@ -215,7 +215,6 @@ public class FlintlockBase extends GunBase {
 
         }
 
-        return true;
     }
 
     @Override

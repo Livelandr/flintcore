@@ -20,7 +20,6 @@ package com.livelandr.flintcore.core.guns;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.livelandr.flintcore.Flintcore;
 import com.livelandr.flintcore.core.util.CameraWork;
 import com.livelandr.flintcore.core.util.HookContext;
 import com.livelandr.flintcore.core.util.HookSystem;
@@ -28,7 +27,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.*;
@@ -222,7 +220,7 @@ public class GunBase extends Item {
     }
 
     // Cooldown stuff
-    public void decreaseCooldownTick(ItemStack gun) {
+    public void __internal_decreaseCooldownTick(ItemStack gun) {
         gun.getOrCreateTag().putInt("cooldownTicks", gun.getOrCreateTag().getInt("cooldownTicks")-1);
 
         if (gun.getOrCreateTag().getInt("cooldownTicks") < 0) {
@@ -237,13 +235,13 @@ public class GunBase extends Item {
         gun.getOrCreateTag().putInt("cooldownTicks", ticks);
     }
 
-    public boolean checkCooldown(ItemStack gun) {
+    public boolean __internal_checkCooldown(ItemStack gun) {
         return gun.getOrCreateTag().getInt("cooldownTicks") <= 0;
     }
 
     @Override
     public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
-        decreaseCooldownTick(pStack);
+        __internal_decreaseCooldownTick(pStack);
     }
 
     // Client stuff
@@ -357,14 +355,14 @@ public class GunBase extends Item {
     }
 
     // Get base NBT modifier
-    public float getModifier(ItemStack gun, String modifierName) {
+    public float __internal_getModifier(ItemStack gun, String modifierName) {
         if (!gun.getOrCreateTag().contains(modifierName)) {
             gun.getTag().putFloat(modifierName, 1.0F);
         }
         return gun.getTag().getFloat(modifierName);
     }
     // Increase/Decrease modifier
-    public void multiplyModifier(ItemStack gun, String modifierName, float n) {
+    public void __internal_multiplyModifier(ItemStack gun, String modifierName, float n) {
         float current = gun.getOrCreateTag().contains(modifierName) ? gun.getTag().getFloat(modifierName) : 1.0F;
 
         gun.getTag().putFloat(modifierName, current * n);
@@ -372,7 +370,7 @@ public class GunBase extends Item {
 
     // Calculate propellant (projectile speed) modifier
     public float propellantModifier(LivingEntity shooter, ItemStack gun) {
-        float baseValue = getModifier(gun, "propellantModifier");
+        float baseValue = __internal_getModifier(gun, "propellantModifier");
 
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_PROPELLANT_MODIFIER)
                 .shooter(shooter)
@@ -383,7 +381,7 @@ public class GunBase extends Item {
 
     // Calculate damage modifier
     public float damageModifier(LivingEntity shooter, ItemStack gun) {
-        float baseValue = getModifier(gun, "damageModifier");
+        float baseValue = __internal_getModifier(gun, "damageModifier");
 
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_DAMAGE_MODIFIER)
                 .shooter(shooter)
@@ -394,7 +392,7 @@ public class GunBase extends Item {
 
     // Calculate recoil X modifier
     public float recoilModifierX(LivingEntity shooter, ItemStack gun) {
-        float baseValue = getModifier(gun, "recoilX");
+        float baseValue = __internal_getModifier(gun, "recoilX");
 
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_RECOIL_MODIFIER_X)
                 .shooter(shooter)
@@ -405,7 +403,7 @@ public class GunBase extends Item {
 
     // Calculate recoil Y modifier
     public float recoilModifierY(LivingEntity shooter, ItemStack gun) {
-        float baseValue = getModifier(gun, "recoilY");
+        float baseValue = __internal_getModifier(gun, "recoilY");
 
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_RECOIL_MODIFIER_Y)
                 .shooter(shooter)
@@ -416,7 +414,7 @@ public class GunBase extends Item {
 
     // Calculate accuracy modifier
     public float accuracyModifier(LivingEntity shooter, ItemStack gun) {
-        float baseValue = getModifier(gun, "accuracy");
+        float baseValue = __internal_getModifier(gun, "accuracy");
 
         return HookSystem.calculateHookSum(new HookContext.Builder(HookSystem.CALCULATE_ACCURACY_MODIFIER)
                 .shooter(shooter)
@@ -427,35 +425,36 @@ public class GunBase extends Item {
 
     // Yeah, I won't comment those
     public void multiplyPropellantModifier(ItemStack gun, float n) {
-        multiplyModifier(gun, "propellantModifier", n);
+        __internal_multiplyModifier(gun, "propellantModifier", n);
     }
     public void multiplyDamageModifier(ItemStack gun, float n) {
-        multiplyModifier(gun, "damageModifier", n);
+        __internal_multiplyModifier(gun, "damageModifier", n);
     }
     public void multiplyRecoilModifierX(ItemStack gun, float n) {
-        multiplyModifier(gun, "recoilModifierX", n);
+        __internal_multiplyModifier(gun, "recoilModifierX", n);
     }
     public void multiplyRecoilModifierY(ItemStack gun, float n) {
-        multiplyModifier(gun, "recoilModifierY", n);
+        __internal_multiplyModifier(gun, "recoilModifierY", n);
     }
     public void multiplyAccuracyModifier(ItemStack gun, float n) {
-        multiplyModifier(gun, "accuracyModifier", n);
+        __internal_multiplyModifier(gun, "accuracyModifier", n);
     }
 
     // Shoot function (NOT ON HOOK, THIS IS INTERNAL CODE WITH ACTUAL SHOOTING)
     @ApiStatus.Internal
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+    public void __internal_shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
         HookSystem.triggerHooks(new HookContext.Builder(HookSystem.ON_SHOOT)
                 .shooter(pPlayer)
                 .gun(gunStack)
                 .build());
 
+
         onShoot(rotationX,rotationY, pLevel, pPlayer, gunStack);
     }
 
     @ApiStatus.Internal
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
-        shoot(pLevel, pPlayer, gunStack, CameraWork.getPlayerViewX(pPlayer),CameraWork.getPlayerViewY(pPlayer));
+    public void __internal_shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack) {
+        __internal_shoot(pLevel, pPlayer, gunStack, CameraWork.getPlayerViewX(pPlayer),CameraWork.getPlayerViewY(pPlayer));
     }
 
     public void itemBreakEvent(LivingEntity entity) {
@@ -476,9 +475,9 @@ public class GunBase extends Item {
     }
 
     // Main Interaction, RMB
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
-        if (!checkCooldown(gunStack)) {
-            return false;
+    public void __internal_interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!__internal_checkCooldown(gunStack)) {
+            return;
         }
 
         ItemStack secondItemStack;
@@ -496,9 +495,9 @@ public class GunBase extends Item {
         if (allowPressingTrigger(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && allowPressingTrigger(pLevel, proxyUser, gunStack, pUsedHand))) {
             if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
                 if (!proxy) {
-                    shoot(pLevel, pPlayer, gunStack);
+                    __internal_shoot(pLevel, pPlayer, gunStack);
                 } else {
-                    shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                    __internal_shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
                 }
             } else {
                 onTryFailure(pLevel, pPlayer, gunStack);
@@ -506,7 +505,6 @@ public class GunBase extends Item {
         }
 
 
-        return true;
     }
 
 
@@ -515,7 +513,7 @@ public class GunBase extends Item {
     public void onUseTick(Level pLevel, LivingEntity pLivingEntity, ItemStack pStack, int pRemainingUseDuration) {
         InteractionHand hand = pLivingEntity.getUsedItemHand();
 
-        interaction(pLevel, pLivingEntity, pStack, hand, false, 0, 0, null);
+        __internal_interaction(pLevel, pLivingEntity, pStack, hand, false, 0, 0, null);
 
         super.onUseTick(pLevel, pLivingEntity, pStack, pRemainingUseDuration);
     }

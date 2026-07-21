@@ -18,7 +18,6 @@
  */
 package com.livelandr.flintcore.core.guns;
 
-import com.livelandr.flintcore.Flintcore;
 import com.livelandr.flintcore.core.util.HookContext;
 import com.livelandr.flintcore.core.util.HookSystem;
 import net.minecraft.ChatFormatting;
@@ -28,8 +27,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -125,7 +122,7 @@ public class BlazelockBase extends GunBase {
 
 
     @Override
-    public void shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
+    public void __internal_shoot(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, float rotationX, float rotationY) {
         BaseAmmo ammo = GetFirstAmmo(gunStack);
 
         gunStack.getTag().putBoolean("IsCocked", false);
@@ -140,7 +137,7 @@ public class BlazelockBase extends GunBase {
         }
 
         if (GetAmmoAmount(gunStack) == 0) gunStack.getTag().putBoolean("ShootReady", false);
-        super.shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
+        super.__internal_shoot(pLevel, pPlayer, gunStack, rotationX, rotationY);
     }
 
     @Override
@@ -157,9 +154,9 @@ public class BlazelockBase extends GunBase {
 
     // TODO: Fix all this noodle code, it's so f ugly I can't
     @Override
-    public boolean interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
-        if (!checkCooldown(gunStack)) {
-            return false;
+    public void __internal_interaction(Level pLevel, LivingEntity pPlayer, ItemStack gunStack, InteractionHand pUsedHand, boolean proxy, float proxyX, float proxyY, LivingEntity proxyUser) {
+        if (!__internal_checkCooldown(gunStack)) {
+            return;
         }
         ItemStack secondItemStack;
 
@@ -177,7 +174,7 @@ public class BlazelockBase extends GunBase {
         // Attachment
         if (checkAttachmentComparability(pPlayer, gunStack, secondItemStack.getItem())) {
             this.setAttachment(pPlayer, gunStack, secondItemStack);
-            return true;
+            return;
         }
 
         // If everything is done - shoot
@@ -186,9 +183,9 @@ public class BlazelockBase extends GunBase {
                 if (!needCocking || gunStack.getTag().getBoolean("IsCocked")) {
                     if (tryShoot(pLevel, pPlayer, gunStack, pUsedHand) || (proxy && tryShoot(pLevel, proxyUser, gunStack, pUsedHand))) {
                         if (!proxy) {
-                            shoot(pLevel, pPlayer, gunStack);
+                            __internal_shoot(pLevel, pPlayer, gunStack);
                         } else {
-                            shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
+                            __internal_shoot(pLevel, pPlayer, gunStack, proxyX, proxyY);
                         }
                     } else {
                         onTryFailure(pLevel, pPlayer, gunStack);
@@ -220,14 +217,12 @@ public class BlazelockBase extends GunBase {
                     gunStack.getTag().putBoolean("ShootReady", true);
                 }
 
-                return true;
             } else {
                 openChamber(pPlayer, gunStack);
             }
         }
 
 
-        return true;
     }
 
 

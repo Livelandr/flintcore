@@ -12,16 +12,28 @@ import java.util.Map;
 
 public class HookSystem {
 
+
+    // Fields: shooter gun
     public static String CALCULATE_DAMAGE_MODIFIER = "CALCULATE_DAMAGE_MODIFIER";
+    // Fields: shooter gun
     public static String CALCULATE_RECOIL_MODIFIER_X = "CALCULATE_RECOIL_MODIFIER_X";
+    // Fields: shooter gun
     public static String CALCULATE_RECOIL_MODIFIER_Y = "CALCULATE_RECOIL_MODIFIER_Y";
+    // Fields: shooter gun
     public static String CALCULATE_PROPELLANT_MODIFIER = "CALCULATE_PROPELLANT_MODIFIER";
+    // Fields: shooter gun
     public static String CALCULATE_ACCURACY_MODIFIER = "CALCULATE_ACCURACY_MODIFIER";
+    // Fields: shooter gun ammoType
     public static String AMMO_COMPATIBILITY_OVERRIDE = "AMMO_COMPATIBILITY_OVERRIDE";
+    // shooter gun(mag) ammoType
     public static String AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE = "AMMO_COMPATIBILITY_MAGAZINE_OVERRIDE";
+    // Fields: shooter gun
     public static String ALLOW_PRESSING_TRIGGER = "ALLOW_PRESSING_TRIGGER";
+    // Fields: shooter gun
     public static String TRY_SHOOT = "TRY_SHOOT";
+    // Fields: shooter gun
     public static String ON_SHOOT = "ON_SHOOT";
+    // Fields: shooter gun
     public static String PROCESS_SHOOTING = "PROCESS_SHOOTING";
 
     // TODO: REPLACE HOOKS TO OTHER STATIC CLASS
